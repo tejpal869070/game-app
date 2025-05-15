@@ -10,7 +10,7 @@ export default function HomeScreen({ navigation }) {
     { id: '3', name: 'Racing Mania' },
   ];
 
-  const renderGame = ({ item }) => (
+  const renderGame = ({ item }) => ( 
     <TouchableOpacity
       style={styles.gameItem}
       onPress={() => navigation.navigate('GameScreen', { gameName: item.name })}

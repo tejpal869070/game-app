@@ -1,282 +1,352 @@
-import { StatusBar } from "expo-status-bar";
+import React from "react";
 import {
-  Text,
   View,
-  Image,
+  Text,
+  StyleSheet,
   ScrollView,
+  Image,
   TouchableOpacity,
   FlatList,
-  StyleSheet,
   Dimensions,
+  SafeAreaView,
+  TextInput,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useRef, useState } from "react";
-import OurGames from "./Games/OurGames";
-import Crickets from "./Games/Crickets";
-import HomeSlider from "../Componentes/HomeSlider";
 
-export default function HomeScreen({ navigation }) {
-  const [currentTabIndex, setCurrentTabIndex] = useState(0);
-  const tabFlatListRef = useRef(null);
+const { width } = Dimensions.get("window");
 
-  const tabs = [
-    { id: "1", title: "Game", content: OurGames },
-    { id: "2", title: "Match", content: Crickets }, 
-    { id: "3", title: "Options", content: renderFootballTab },
+const HomeScreen = () => {
+  // Sample data for each section
+  const topSections = [
+    { id: "1", title: "JetX", icon: require("../assets/photos/air-force.png") },
+    {
+      id: "2",
+      title: "Sports",
+      icon: require("../assets/photos/football.png"),
+    },
+    {
+      id: "3",
+      title: "Live Casino",
+      icon: require("../assets/photos/casino.png"),
+    },
+    {
+      id: "4",
+      title: "Evolution",
+      icon: require("../assets/photos/herbal.png"),
+    },
+    {
+      id: "5",
+      title: "Casino",
+      icon: require("../assets/photos/casino-chip.png"),
+    },
+    {
+      id: "6",
+      title: "Aviator",
+      icon: require("../assets/photos/aviator.png"),
+    },
+    {
+      id: "7",
+      title: "VIP Club",
+      icon: require("../assets/photos/premium-quality.png"),
+    },
+    {
+      id: "8",
+      title: "Cricket",
+      icon: require("../assets/photos/cricket (1).png"),
+    },
   ];
 
-  function renderFootballTab() {
-    return (
-      <View style={styles.tabContent}>
-        <Text style={styles.tabContentText}>Football updates coming soon!</Text>
-      </View>   
-    ); 
-  }
+  const liveCasino = [
+    {
+      id: "1",
+      image: require("../assets/photos/casino1.jpg"),
+    },
+    {
+      id: "2",
+      image: require("../assets/photos/casino2.jpg"),
+    },
+    {
+      id: "3",
+      image: require("../assets/photos/casino3.jpg"),
+    },
+  ];
 
-  const renderTabContent = ({ item }) => ( 
-    <View style={styles.tabContentContainer}>{item.content()}</View>
+  const sports = [
+    {
+      id: "1",
+      title: "Cricket",
+      icon: require("../assets/photos/cricket (1).png"),
+    },
+
+    {
+      id: "3",
+      title: "Ecricket",
+      icon: require("../assets/photos/cricket-helmet.png"),
+    },
+    {
+      id: "4",
+      title: "Basketball",
+      icon: require("../assets/photos/basketball-hoop.png"),
+    },
+    { id: "5", title: "Tennis", icon: require("../assets/photos/tennis.png") },
+    {
+      id: "2",
+      title: "Football",
+      icon: require("../assets/photos/football.png"),
+    },
+  ];
+
+  const games = [
+    {
+      id: "1",
+      icon: require("../assets/photos/coin-flip.png"),
+      gameName: "coinFlip",
+    },
+    {
+      id: "2",
+      icon: require("../assets/photos/dragon.png"),
+      gameName: "dragonTower",
+    },
+    {
+      id: "3",
+      icon: require("../assets/photos/limbo.png"),
+      gameName: "limbo",
+    },
+    {
+      id: "4",
+      icon: require("../assets/photos/minesgme.png"),
+      gameName: "mines",
+    },
+    {
+      id: "5",
+      icon: require("../assets/photos/wheel.png"),
+      gameName: "wheel",
+    },
+    {
+      id: "6",
+      icon: require("../assets/photos/cricket.png"),
+      gameName: "cricket",
+    },
+  ];
+
+  // Render item for FlatList
+  const renderGridItem = (item, size, isIcon = false) => (
+    <TouchableOpacity style={[styles.gridItem, { width: size, height: size }]}>
+      {isIcon ? (
+        <Image source={item.icon} style={styles.icon} />
+      ) : (
+        <Image source={item.image} style={styles.gameImage} />
+      )}
+      {item.title && <Text style={styles.gridItemText}>{item.title}</Text>}
+    </TouchableOpacity>
   );
-       
-  
-  const handleTabScroll = (event) => {  
-    const contentOffsetX = event.nativeEvent.contentOffset.x;
-    const index = Math.round(contentOffsetX / Dimensions.get("window").width);
-    setCurrentTabIndex(index);
-  };  
 
-  const handleTabPress = (index) => {
-    setCurrentTabIndex(index); 
-    tabFlatListRef.current?.scrollToIndex({ index, animated: true });
-  };
+  // Render item for FlatList
+  const renderCasinoItem = (item, size, isIcon = false) => (
+    <TouchableOpacity
+      style={[styles.gridItem, { width: size, height: size / 1.5 }]}
+    >
+      {isIcon ? (
+        <Image source={item.icon} style={styles.icon} />
+      ) : (
+        <Image source={item.image} style={styles.gameImage} />
+      )}
+      {item.title && <Text style={styles.gridItemText}>{item.title}</Text>}
+    </TouchableOpacity>
+  );
 
-  return ( 
-    <ScrollView style={styles.container}>  
-      {/* Header */}
-      <View style={styles.header}>
-        <Image
-          source={require("../assets/photos/boy.png")}
-          style={styles.headerProfileImage}
-        />
-        <Image
-          source={require("../assets/photos/logo.png")}
-          style={styles.headerLogoImage}
-        />
-        <TouchableOpacity>
-          <Ionicons name="notifications" size={28} color="#1E293B" />
-        </TouchableOpacity>
-      </View> 
+  // Render item for FlatList
+  const renderGameItem = (item, size, isIcon = false) => (
+    <TouchableOpacity
+      style={[styles.gridItem, { width: size, height: size + 35 }]}
+    >
+      {isIcon ? (
+        <Image source={item.icon} style={styles.gameIcon} />
+      ) : (
+        <Image source={item.image} style={styles.gameImage} />
+      )}
+      {item.title && <Text style={styles.gridItemText}>{item.title}</Text>}
+    </TouchableOpacity>
+  );
 
-      {/* Balance Section */}
-      <View style={styles.balanceCard}>
-        <Text style={styles.balanceLabel}>Your Balance</Text>
-        <Text style={styles.balanceAmount}>$5,230.00</Text>
-      </View>
-
-      <HomeSlider />
-
-      {/* Swipe Tabs Section */}
-      <View style={styles.tabsContainer}>
-        <View style={styles.tabHeader}>
-          {tabs.map((tab, index) => (
-            <TouchableOpacity
-              key={tab.id}
-              style={[
-                styles.tabHeaderItem,
-                currentTabIndex === index && styles.tabHeaderItemActive,
-              ]}
-              onPress={() => handleTabPress(index)}
-            >
-              <Text
-                style={[
-                  styles.tabHeaderText,
-                  currentTabIndex === index && styles.tabHeaderTextActive,
-                ]}
-              >
-                {tab.title}
-              </Text>
-            </TouchableOpacity>
-          ))}
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView>
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color="#888" />
+          <TextInput style={styles.searchText} placeholder="Search..." />
         </View>
-        <FlatList
-          ref={tabFlatListRef}
-          data={tabs}
-          renderItem={renderTabContent}
-          keyExtractor={(item) => item.id}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          onScroll={handleTabScroll}
-          scrollEventThrottle={16}
-        />
-      </View>
- 
-      <StatusBar style="dark" />
-    </ScrollView>
+
+        {/* Banner */}
+        <View style={styles.bannerContainer}>
+          <Image
+            source={require("../assets/photos/banner1.png")}
+            style={styles.bannerImage}
+          />
+        </View>
+
+        {/* Top Sections */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Top Sections</Text>
+          <FlatList
+            data={topSections}
+            renderItem={({ item }) =>
+              renderGridItem(item, width / 5 - 10, true)
+            }
+            keyExtractor={(item) => item.id}
+            horizontal={true} // Makes the FlatList scroll horizontally
+            showsHorizontalScrollIndicator={false} // Optional: hides the scroll indicator
+            scrollEnabled={true} // Allows scrolling
+            contentContainerStyle={styles.flatListContainer}
+          />
+        </View>
+
+        {/* Sports */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Sports</Text>
+            <TouchableOpacity>
+              <Text style={styles.moreText}>More Live Events &gt;</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={sports}
+            renderItem={({ item }) =>
+              renderGridItem(item, width / 5 - 14, true)
+            }
+            keyExtractor={(item) => item.id}
+            numColumns={5}
+            scrollEnabled={false}
+          />
+        </View>
+
+        {/* Live Casino */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Live Casino</Text>
+            <TouchableOpacity>
+              <Text style={styles.moreText}>More Live Dealers &gt;</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={liveCasino}
+            renderItem={({ item }) => renderCasinoItem(item, width / 2 - 15)} // Adjust item size as needed
+            keyExtractor={(item) => item.id}
+            horizontal={true} // Makes the FlatList scroll horizontally
+            showsHorizontalScrollIndicator={false} // Optional: hides the scroll indicator
+            scrollEnabled={true} // Allows scrolling
+            contentContainerStyle={styles.flatListContainer} // Optional: to style the content container
+          />
+        </View>
+
+        {/* Our games */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Games</Text>
+            <TouchableOpacity>
+              <Text style={styles.moreText}>More Games &gt;</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={games}
+            renderItem={({ item }) => renderGameItem(item, width / 3, true)}
+            keyExtractor={(item) => item.id}
+            horizontal={true} // Makes the FlatList scroll horizontally
+            showsHorizontalScrollIndicator={false} // Optional: hides the scroll indicator
+            scrollEnabled={true} // Allows scrolling
+            contentContainerStyle={styles.flatListContainer}
+          />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
-}  
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#1a1a2e",
     paddingTop: 40,
   },
-  // Header
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 16,
-  },
-  headerProfileImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-  },
-  // Greeting Section
-  greetingContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-  greetingText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#1E293B",
-    marginBottom: 4, 
-  },
-  subGreetingText: {
-    fontSize: 16,
-    color: "#6B7280", 
-  },
-  // Balance Section 
-  balanceCard: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 16,
-    marginHorizontal: 16,
-    marginBottom: 11,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  balanceLabel: {
-    fontSize: 16,
-    color: "#6B7280",
-    marginBottom: 8,
-  }, 
-  balanceAmount: {
-    fontSize: 32, 
-    fontWeight: "bold", 
-    color: "#1E293B",
-    marginBottom: 16,
-  },
-  transferButton: {
+  searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#2563EB",
-    borderRadius: 9999,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    backgroundColor: "#2a2a3e",
+    margin: 10,
+    padding: 10,
+    borderRadius: 8,
   },
-  transferText: {
+  searchText: {
+    flex: 1,
+    color: "red",
+    marginLeft: 10,
+    fontSize: 16,
+    height: 10,
+  },
+  bannerContainer: {
+    marginHorizontal: 10,
+    marginBottom: 10,
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  bannerImage: {
+    width: "100%",
+    height: 100,
+  },
+  bannerText: {
+    position: "absolute",
+    bottom: 10,
+    left: 10,
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
-    marginRight: 8,
   },
-  transferIcon: {
-    marginLeft: 4,
+  section: {
+    marginBottom: 20,
+    paddingHorizontal: 10,
   },
-  // Recent Transactions Section
-  sectionContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 24,
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
   },
   sectionTitle: {
+    color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
-    color: "#1E293B",
-    marginBottom: 16,
   },
-
-  // Quick Actions Section
-  quickActionsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  moreText: {
+    color: "#00c4ff",
+    fontSize: 14,
   },
-  quickActionButton: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
+  gridItem: {
+    margin: 5,
     alignItems: "center",
-    width: "22%",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    justifyContent: "center",
+    borderRadius: 8,
+    backgroundColor: "#2a2a3e",
   },
-  quickActionText: {
-    fontSize: 12,
-    color: "#1E293B",
-    marginTop: 8,
-  },
-
-  headerLogoImage: {
-    width: 120,
+  icon: {
+    width: 40,
     height: 40,
-    resizeMode: "contain",
   },
-  tabsContainer: {
-    marginBottom: 16,
-  }, 
-  tabHeader: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: 4,
-    backgroundColor: "#fff",
-    borderRadius: 12, 
-    marginHorizontal: 16,
-    marginBottom: 8, 
-    boxShadow : "1px 1px 4px black"
+  gameIcon: {
+    width: "100%",
+    height: "100%",
   },
-  tabHeaderItem: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+  gameImage: {
+    width: "100%",
+    height: "100%",
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
   },
-  tabHeaderItemActive: {
-    backgroundColor: "#2563EB",
-    borderRadius: 90,  
-    paddingHorizontal: 24,
-  },
-  tabHeaderText: { 
-    fontSize: 16,
-    color: "#6B7280",
-    fontWeight: "bold",
-  },
-  tabHeaderTextActive: {
+  gridItemText: {
     color: "#fff",
-  },
-  tabContentContainer: {
-    width: Dimensions.get("window").width,
-    paddingHorizontal: 16,
-  },
-  tabContent: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  tabContentText: {
-    fontSize: 16,
-    color: "#1E293B",
-    textAlign: "center",
+    fontSize: 14,
+    marginTop: 5,
   },
 });
- 
+
+export default HomeScreen;

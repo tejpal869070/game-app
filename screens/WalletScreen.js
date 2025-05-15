@@ -6,121 +6,188 @@ import {
   TouchableOpacity,
   StyleSheet,
   FlatList,
+  ActivityIndicator,
+  Modal,
+  ScrollView,
+  RefreshControl,
+  SafeAreaView,
+  ImageBackground,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { GetUserDetails } from "../Controllers/userController";
+import { useCallback, useEffect, useState } from "react";
+import DespoitScreen from "../Componentes/DepositScreen";
+import Toast from "react-native-toast-message";
+import UserStatement from "../Componentes/UserStatement";
+import { CgLayoutGrid } from "react-icons/cg";
 
-export default function WalletScreen() {
+export default function WalletScreen({ navigation }) {
+  const [user, setUser] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [isDepositOpen, setDepositOpen] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
   const quickActions = [
-    { icon: "card", label: "Pay" },
-    { icon: "arrow-down", label: "Receive" },
-    { icon: "add-circle", label: "Top Up" },
-    { icon: "ellipsis-horizontal", label: "More" },
-  ];
-  const transactions = [
+    { icon: "wallet", label: "Despoit", action: () => setDepositOpen(true) },
     {
-      id: "1",
-      icon: "person",
-      name: "Alex Lee",
-      date: "15 Aug",
-      amount: "-$230.00",
-      color: "#EF4444",
+      icon: "arrow-down",
+      label: "Withdraw",
+      action: () =>
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Amount should be greater than 10",
+        }),
     },
-    {
-      id: "2",
-      icon: "person",
-      name: "John Doe",
-      date: "14 Aug",
-      amount: "+$500.00",
-      color: "#10B981",
-    },
-    {
-      id: "3",
-      icon: "person",
-      name: "Sarah Smith",
-      date: "13 Aug",
-      amount: "-$120.00",
-      color: "#EF4444",
-    },
+    { icon: "send", label: "Send", action: () => setDepositOpen(true) },
+    { icon: "reload", label: "Exchange", action: () => setDepositOpen(true) },
   ];
 
-  const renderTransaction = ({ item }) => (
-    <View style={styles.transactionItem}>
-      <View style={styles.transactionIconContainer}>
-        <Ionicons name={item.icon} size={24} color="#fff" />
+  const userGet = async () => {
+    setRefreshing(true);
+    try {
+      const response = await GetUserDetails();
+      if (response !== null) {
+        setUser(response?.data?.user || {});
+      } else {
+        throw new Error("No user data received");
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to load user data",
+      });
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  // Refresh handler
+  const onRefresh = useCallback(() => {
+    userGet();
+  }, []);
+
+  useEffect(() => {
+    userGet();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#007bff" />
       </View>
-      <View style={styles.transactionDetails}>
-        <Text style={styles.transactionName}>{item.name}</Text>
-        <Text style={styles.transactionDate}>{item.date}</Text>
-      </View>
-      <Text style={[styles.transactionAmount, { color: item.color }]}>
-        {item.amount}
-      </Text>
-    </View>
-  );
+    );
+  }
 
   return (
-    <View style={styles.container}>
-      {/* Profile Section */}
-      <View style={styles.profileContainer}>
-        <Image
-          source={require("../assets/photos/walleticon.png")}
-          style={styles.profileImage}
+    <SafeAreaView style={styles.container}>
+      <ScrollView
+        
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        {/* Profile Section */}
+        <View style={styles.profileContainer}>
+          <Image
+            source={require("../assets/photos/walleticon.png")}
+            style={styles.profileImage}
+          />
+          <Text style={styles.profileName}>Tarun Soni</Text>
+        </View>
+
+        {/* Balance Section */}
+        <ImageBackground source={require("../assets/photos/bg3.jpg")} style={styles.balanceCard}>
+          <View style={styles.balanceItem}>
+            <Text style={styles.balanceLabel}>Main Wallet</Text>
+            <Text style={styles.balanceAmount}>
+              ₹{Number(user?.main_wallet).toFixed(2)}
+            </Text>
+          </View>
+          <View style={styles.balanceItem}>
+            <Text style={styles.balanceLabel}>Game Wallet</Text>
+            <Text style={styles.balanceAmount}>
+              ₹{Number(user?.game_wallet).toFixed(2)}
+            </Text>
+          </View>
+        </ImageBackground>
+
+        {/* Quick Actions Section */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Quick Actions</Text>
+
+          <View style={styles.quickActionsContainer}>
+            {quickActions.map((action, index) => (
+              <TouchableOpacity
+                onPress={action.action}
+                key={index}
+                style={styles.quickActionButton}
+              >
+                <Ionicons name={action.icon} size={24} color="#1E293B" />
+                <Text style={styles.quickActionText}>{action.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        <UserStatement />
+
+        <DespoitScreen
+          visible={isDepositOpen}
+          onClose={(type) => {
+            setDepositOpen(false);
+            if (type === "success") {
+              setShowSuccessPopup(true);
+            }
+          }}
+          user={user}
         />
-        <Text style={styles.profileName}>Tarun Soni</Text>
-      </View>
 
-      {/* Balance Section */}
-      <View style={styles.balanceCard}>
-        <View style={styles.balanceItem}>
-          <Text style={styles.balanceLabel}>Main Wallet</Text>
-          <Text style={styles.balanceAmount}>$2314.30</Text>
-        </View>
-        <View style={styles.balanceItem}>
-          <Text style={styles.balanceLabel}>Game Wallet</Text>
-          <Text style={styles.balanceAmount}>$1340.00</Text>
-        </View>
-      </View>
+        {/* Success Popup Modal */}
+        <Modal
+          visible={showSuccessPopup}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowSuccessPopup(false)}
+        >
+          <View style={styles.overlay}>
+            <View style={styles.popup}>
+              <Image
+                source={require("../assets/photos/loading2.webp")}
+                style={styles.loadingGif}
+              />
+              <Text style={styles.message}>Verifying Your Payment!</Text>
+              <TouchableOpacity
+                onPress={() => setShowSuccessPopup(false)}
+                style={styles.closeButton}
+              >
+                <Text style={styles.closeText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
 
-      {/* Quick Actions Section */}
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
-        <View style={styles.quickActionsContainer}>
-          {quickActions.map((action, index) => (
-            <TouchableOpacity key={index} style={styles.quickActionButton}>
-              <Ionicons name={action.icon} size={24} color="#1E293B" />
-              <Text style={styles.quickActionText}>{action.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      {/* Recent Transactions Section */}
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>Recent Transactions</Text>
-        <FlatList
-          data={transactions}
-          renderItem={renderTransaction}
-          keyExtractor={(item) => item.id}
-          scrollEnabled={false}
-        />
-      </View>
-
-      <StatusBar style="dark" />
-    </View>
+        <StatusBar style="light" />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#1a1a2e",
     paddingHorizontal: 16,
     paddingTop: 60,
   },
   // Profile Section
   profileContainer: {
     alignItems: "center",
-    marginBottom: 24,
+    marginBottom: 18,
   },
   profileImage: {
     width: 80,
@@ -130,7 +197,7 @@ const styles = StyleSheet.create({
   profileName: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "black",
+    color: "white",
     marginBottom: 4,
   },
   profileIcon: {
@@ -143,12 +210,13 @@ const styles = StyleSheet.create({
     padding: 16,
     flexDirection: "row",
     justifyContent: "space-around",
-    marginBottom: 24,
+    marginBottom: 20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    overflow : "hidden"
   },
   balanceItem: {
     alignItems: "center",
@@ -158,13 +226,13 @@ const styles = StyleSheet.create({
   },
   balanceLabel: {
     fontSize: 14,
-    color: "#6B7280",
+    color: "white",
     marginBottom: 4,
   },
   balanceAmount: {
-    fontSize: 22,
+    fontSize: 25,
     fontWeight: "bold",
-    color: "#1F2937",
+    color: "white",
   },
   // Action Buttons
   actionCard: {
@@ -215,7 +283,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#1E293B",
+    color: "#f58814",
     marginBottom: 16,
   },
   quickActionsContainer: {
@@ -223,7 +291,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   quickActionButton: {
-    backgroundColor: "#fff",
+    backgroundColor: "#ededed",
     borderRadius: 12,
     padding: 16,
     alignItems: "center",
@@ -239,40 +307,36 @@ const styles = StyleSheet.create({
     color: "#1E293B",
     marginTop: 8,
   },
-  transactionItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  transactionIconContainer: {
-    backgroundColor: "#2563EB",
-    borderRadius: 50,
-    padding: 8,
-    marginRight: 12,
-  },
-  transactionDetails: {
+  overlay: {
     flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  transactionName: {
-    fontSize: 16,
+  popup: {
+    backgroundColor: "white",
+    padding: 24,
+    borderRadius: 10,
+    alignItems: "center",
+    width: "80%",
+  },
+  message: {
+    fontSize: 18,
+    marginBottom: 20,
+  },
+  closeButton: {
+    backgroundColor: "#2196F3",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+  },
+  closeText: {
+    color: "white",
     fontWeight: "bold",
-    color: "#1E293B",
-    marginBottom: 4,
   },
-  transactionDate: {
-    fontSize: 14,
-    color: "#6B7280",
-  },
-  transactionAmount: {
-    fontSize: 16,
-    fontWeight: "bold",
+  loadingGif: {
+    width: 40,
+    height: 40,
+    marginBottom: 16,
   },
 });

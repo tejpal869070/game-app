@@ -73,7 +73,7 @@ export default function Cricket() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.matchList}
       />
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
     </View>
   );
 }

@@ -2,12 +2,31 @@ import { StatusBar } from "expo-status-bar";
 import { Text, View, ImageBackground, Image, StyleSheet } from "react-native";
 import { styles } from "../styles/Styles";
 import { useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Toast from "react-native-toast-message";
 
 export default function StartingPage({ navigation }) {
   useEffect(() => {
+    const checkTokenAndRedirect = async () => {
+      try {
+        const token = await AsyncStorage.getItem("token");
+        const targetScreen = token ? "MainApp" : "Login";
+        navigation.replace(targetScreen);
+      } catch (error) {
+        console.error("Error checking token:", error);
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Failed to verify authentication",
+        });
+        navigation.replace("Login"); // Fallback to Login on error
+      }
+    };
+
     const timer = setTimeout(() => {
-      navigation.replace("Login");
+      checkTokenAndRedirect();
     }, 3000);
+
     return () => clearTimeout(timer);
   }, [navigation]);
 
@@ -28,10 +47,6 @@ export default function StartingPage({ navigation }) {
     </ImageBackground>
   );
 }
-
-
-
-
 
 // Define styles directly within the component
 const Customstyles = StyleSheet.create({
