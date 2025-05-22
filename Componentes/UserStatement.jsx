@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { FlatList, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  FlatList,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { GetAccountAllStatement } from "../Controllers/userController";
 import { TouchableOpacity } from "react-native";
@@ -10,6 +17,7 @@ export default function UserStatement() {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
+  const [popupData, setPopupData] = useState({});
 
   const GetAllStatement = async () => {
     try {
@@ -30,11 +38,25 @@ export default function UserStatement() {
 
   const renderTransaction = ({ item }) => (
     <TouchableOpacity
-      onPress={() => setShowReceipt(true)}
+      onPress={() => {
+        setShowReceipt(true);
+        console.log(item);
+        setPopupData(item);
+      }}
       style={styles.transactionItem}
     >
       <View style={styles.transactionIconContainer}>
-        <Ionicons name="person" size={24} color="#fff" />
+        {item.type === "Deposit" ? (
+          <Image
+            style={styles.icon}
+            source={require("../assets/photos/wallet (1).png")}
+          />
+        ) : (
+          <Image
+            style={styles.icon}
+            source={require("../assets/photos/withdrawal.png")}
+          />
+        )}
       </View>
       <View style={styles.transactionDetails}>
         <Text style={styles.transactionName}>{item.type}</Text>
@@ -66,7 +88,11 @@ export default function UserStatement() {
       </View>
       <ReceiptPopup
         visible={showReceipt}
-        onClose={() => setShowReceipt(false)}
+        onClose={() => {
+          setShowReceipt(false);
+          setPopupData({});
+        }}
+        data={popupData}
       />
     </ScrollView>
   );
@@ -96,9 +122,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   transactionIconContainer: {
-    backgroundColor: "#2563EB",
     borderRadius: 50,
-    padding: 8,
     marginRight: 12,
   },
   transactionDetails: {
@@ -117,5 +141,9 @@ const styles = StyleSheet.create({
   transactionAmount: {
     fontSize: 18,
     fontWeight: "bold",
+  },
+  icon: {
+    width: 40,
+    height: 40,
   },
 });

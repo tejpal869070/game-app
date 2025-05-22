@@ -11,6 +11,7 @@ import Toast from "react-native-toast-message";
 import { SafeAreaView } from "react-native";
 import OurGames from "./screens/Games/OurGames";
 import PrivacyPolicyScreen from "./screens/PrivacyPolicyScreen";
+import GiveAwayScreen from "./screens/GiveAwayScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -52,8 +53,14 @@ export default function App() {
         <Stack.Screen
           name="Privacy"
           component={PrivacyPolicyScreen}
-          options={{ title: "Privacy Policy", headerShown : false }}
+          options={{ title: "Privacy Policy", headerShown: false }}
         />
+        <Stack.Screen
+          name="Giveaway"
+          component={GiveAwayScreen}
+          options={{ title: "Privacy Policy", headerShown: false }}
+        />
+         
       </Stack.Navigator>
     </NavigationContainer>
   );

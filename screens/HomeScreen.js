@@ -15,7 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 const { width } = Dimensions.get("window");
 
-const HomeScreen = () => {
+const HomeScreen = ({ navigation }) => {
   // Sample data for each section
   const topSections = [
     { id: "1", title: "JetX", icon: require("../assets/photos/air-force.png") },
@@ -202,6 +202,20 @@ const HomeScreen = () => {
           />
         </View>
 
+        <TouchableOpacity onPress={() => navigation.navigate("Giveaway")}>
+          <Image
+            style={{
+              width: "93%",
+              height: 150,
+              margin: "auto",
+              borderRadius: 8,
+              resizeMode: "cover",
+              marginBottom: 16,
+            }}
+            source={require("../assets/photos/prise4.png")}
+          />
+        </TouchableOpacity>
+
         {/* Sports */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -303,7 +317,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   section: {
-    marginBottom: 20,
+    marginBottom: 12,
     paddingHorizontal: 10,
   },
   sectionHeader: {
@@ -316,6 +330,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
+    marginLeft: 4,
   },
   moreText: {
     color: "#00c4ff",

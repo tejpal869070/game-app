@@ -20,28 +20,26 @@ import DespoitScreen from "../Componentes/DepositScreen";
 import Toast from "react-native-toast-message";
 import UserStatement from "../Componentes/UserStatement";
 import { CgLayoutGrid } from "react-icons/cg";
+import PinVerificationPopup from "../Controllers/PinVerificationPopup";
+import WithdrawalPopup from "../Controllers/WithdrawalPopup";
+import DepositScreen from "../Componentes/DepositScreen";
 
 export default function WalletScreen({ navigation }) {
   const [user, setUser] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [isDepositOpen, setDepositOpen] = useState(false);
+  const [loading, setLoading] = useState(true); 
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [isPopupVisible, setPopupVisible] = useState(false);
+  const [depositPopup, setDepositPopup] = useState(false)
 
   const quickActions = [
-    { icon: "wallet", label: "Despoit", action: () => setDepositOpen(true) },
+    { icon: "wallet", label: "Despoit", action: () => setDepositPopup(true) },
     {
       icon: "arrow-down",
       label: "Withdraw",
-      action: () =>
-        Toast.show({
-          type: "error",
-          text1: "Error",
-          text2: "Amount should be greater than 10",
-        }),
+      action: () => setPopupVisible(true),
     },
-    { icon: "send", label: "Send", action: () => setDepositOpen(true) },
-    { icon: "reload", label: "Exchange", action: () => setDepositOpen(true) },
+    { icon: "reload", label: "Exchange", action: () => setDepositPopup(true) },
   ];
 
   const userGet = async () => {
@@ -66,6 +64,11 @@ export default function WalletScreen({ navigation }) {
     }
   };
 
+  const handleSuccess = () => {
+    alert("PIN Verified Successfully!");
+    setPopupVisible(false);
+  };
+
   // Refresh handler
   const onRefresh = useCallback(() => {
     userGet();
@@ -77,7 +80,14 @@ export default function WalletScreen({ navigation }) {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#1a1a2e",
+        }}
+      >
         <ActivityIndicator size="large" color="#007bff" />
       </View>
     );
@@ -86,22 +96,17 @@ export default function WalletScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
-        
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Profile Section */}
-        <View style={styles.profileContainer}>
-          <Image
-            source={require("../assets/photos/walleticon.png")}
-            style={styles.profileImage}
-          />
-          <Text style={styles.profileName}>Tarun Soni</Text>
-        </View>
+         
 
         {/* Balance Section */}
-        <ImageBackground source={require("../assets/photos/bg3.jpg")} style={styles.balanceCard}>
+        <ImageBackground
+          source={require("../assets/photos/bg3.jpg")}
+          style={styles.balanceCard}
+        >
           <View style={styles.balanceItem}>
             <Text style={styles.balanceLabel}>Main Wallet</Text>
             <Text style={styles.balanceAmount}>
@@ -136,15 +141,9 @@ export default function WalletScreen({ navigation }) {
 
         <UserStatement />
 
-        <DespoitScreen
-          visible={isDepositOpen}
-          onClose={(type) => {
-            setDepositOpen(false);
-            if (type === "success") {
-              setShowSuccessPopup(true);
-            }
-          }}
-          user={user}
+        <DepositScreen
+          visible={depositPopup}
+          onClose={() => setDepositPopup(false)}
         />
 
         {/* Success Popup Modal */}
@@ -171,6 +170,11 @@ export default function WalletScreen({ navigation }) {
           </View>
         </Modal>
 
+        <WithdrawalPopup
+          visible={isPopupVisible}
+          onClose={() => setPopupVisible(false)}
+          user={user}
+        />
         <StatusBar style="light" />
       </ScrollView>
     </SafeAreaView>
@@ -216,7 +220,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    overflow : "hidden"
+    overflow: "hidden",
   },
   balanceItem: {
     alignItems: "center",
@@ -292,10 +296,10 @@ const styles = StyleSheet.create({
   },
   quickActionButton: {
     backgroundColor: "#ededed",
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 8,
+    padding: 10,
     alignItems: "center",
-    width: "22%",
+    width: "30%",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,

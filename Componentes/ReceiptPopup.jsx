@@ -7,23 +7,12 @@ import {
   Modal,
   ScrollView,
   Dimensions,
-  Share,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 const { height } = Dimensions.get("window");
 
-const ReceiptPopup = ({ visible, onClose }) => {
-  const onShare = async () => {
-    try {
-      await Share.share({
-        message:
-          "Receipt: You received 10,000,000 sats from bc1q gx9g ... sfsy",
-      });
-    } catch (error) {
-      console.error(error);
-    }
-  };
+const ReceiptPopup = ({ visible, onClose, data }) => {
   return (
     <Modal
       animationType="slide"
@@ -39,56 +28,50 @@ const ReceiptPopup = ({ visible, onClose }) => {
               <View style={styles.iconContainer}>
                 <Ionicons name="arrow-down" size={24} color="#fff" />
               </View>
-              <Text style={styles.receivedText}>
-                You received 10,000,000 sats.
-              </Text>
+              <Text style={styles.receivedText}>{data?.type}</Text>
             </View>
 
             <View style={styles.detailRow}>
-              <Text style={styles.label}>From</Text>
+              <Text style={styles.label}>Amount</Text>
               <View style={styles.valueRow}>
-                <Text style={styles.value}>bc1q gx9g ... sfsy</Text>
-                <Ionicons
-                  name="person-circle-outline"
-                  size={20}
-                  color="#888"
-                  style={styles.icon}
-                />
+                <Text style={styles.value}>{data?.amount}</Text>
               </View>
             </View>
 
             <View style={styles.detailRow}>
-              <Text style={styles.label}>Network fee</Text>
+              <Text style={styles.label}>Date</Text>
               <View style={styles.valueRow}>
-                <Text style={styles.value}>~7 sats</Text>
-                <Ionicons
-                  name="information-circle-outline"
-                  size={20}
-                  color="#888"
-                  style={styles.icon}
-                />
+                <Text style={styles.value}>{data?.date?.split("T")[0]}</Text>
               </View>
             </View>
-
             <View style={styles.detailRow}>
-              <Text style={styles.label}>Swap fee</Text>
+              <Text style={styles.label}>Time</Text>
               <View style={styles.valueRow}>
-                <Text style={styles.value}>~2,000 sats</Text>
-                <Ionicons
-                  name="information-circle-outline"
-                  size={20}
-                  color="#888"
-                  style={styles.icon}
-                />
+                <Text style={styles.value}>
+                  {data?.date?.split("T")[1]?.split(".")[0]}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.label}>Trnx. ID</Text>
+              <View style={styles.valueRow}>
+                <Text style={styles.value}>
+                  {data?.transection_id}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.label}>Description</Text>
+              <View style={styles.valueRow}>
+                <Text style={styles.value}>
+                  {data?.description}
+                </Text>
               </View>
             </View>
           </ScrollView>
 
           {/* Footer Buttons */}
           <View style={styles.footer}>
-            <TouchableOpacity onPress={onShare} style={styles.shareButton}>
-              <Text style={styles.shareText}>Share receipt</Text>
-            </TouchableOpacity>
             <TouchableOpacity style={styles.doneButton} onPress={onClose}>
               <Text style={styles.doneText}>Done</Text>
             </TouchableOpacity>

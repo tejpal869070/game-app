@@ -1,24 +1,15 @@
 import { TouchableOpacity } from "react-native";
 import { StyleSheet, Text, View } from "react-native";
 import CoinFLip from "../Games/CoinFlip";
+import Mines from "../Componentes/Games/Mines";
 
 export default function GameScreen({ route, navigation }) {
-  const { gameName } = route.params;
+  const { gameName } = route.params; 
 
   const renderGame = (gameName) => {
     switch (gameName) {
-      case "coinFlip":
-        return (
-          <View style={styles.container}>
-            <Text style={styles.noGameText}>Game "{gameName}" Not Found</Text>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
-            >
-              <Text style={styles.backButtonText}>Go Back</Text>
-            </TouchableOpacity>
-          </View>
-        );
+      case "mines":
+        return <Mines />;
       default:
         return (
           <View style={styles.container}>

@@ -12,7 +12,7 @@ import {
   View,
 } from "react-native";
 
-export default function OurGames({ navigation }) {
+export default function OurGames({ navigation }) { 
   const games = [
     {
       id: "1",
