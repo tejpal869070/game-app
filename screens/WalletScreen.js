@@ -2,7 +2,6 @@ import { StatusBar } from "expo-status-bar";
 import {
   Text,
   View,
-  Image,
   TouchableOpacity,
   StyleSheet,
   FlatList,
@@ -11,35 +10,48 @@ import {
   ScrollView,
   RefreshControl,
   SafeAreaView,
-  ImageBackground,
+  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { GetUserDetails } from "../Controllers/userController";
 import { useCallback, useEffect, useState } from "react";
-import DespoitScreen from "../Componentes/DepositScreen";
 import Toast from "react-native-toast-message";
 import UserStatement from "../Componentes/UserStatement";
-import { CgLayoutGrid } from "react-icons/cg";
-import PinVerificationPopup from "../Controllers/PinVerificationPopup";
-import WithdrawalPopup from "../Controllers/WithdrawalPopup";
 import DepositScreen from "../Componentes/DepositScreen";
+import WithdrawalPopup from "../Controllers/WithdrawalPopup";
 
 export default function WalletScreen({ navigation }) {
   const [user, setUser] = useState({});
-  const [loading, setLoading] = useState(true); 
-  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [isDepositOpen, setDepositOpen] = useState(false);
   const [isPopupVisible, setPopupVisible] = useState(false);
-  const [depositPopup, setDepositPopup] = useState(false)
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
   const quickActions = [
-    { icon: "wallet", label: "Despoit", action: () => setDepositPopup(true) },
+    { icon: "wallet", label: "Deposit", action: () => setDepositOpen(true) },
     {
-      icon: "arrow-down",
-      label: "Withdraw",
+      icon: "arrow-down-circle",
+      label: "Withdrawal",
       action: () => setPopupVisible(true),
     },
-    { icon: "reload", label: "Exchange", action: () => setDepositPopup(true) },
+  ];
+
+  const cards = [
+    {
+      id: "1",
+      type: "Platinum",
+      brand: "MasterCard",
+      holder: "Aravind S",
+      lastFour: "4321",
+    },
+    {
+      id: "2",
+      type: "Classic",
+      brand: "Visa",
+      holder: "Aravind S",
+      lastFour: "9876",
+    },
   ];
 
   const userGet = async () => {
@@ -64,12 +76,6 @@ export default function WalletScreen({ navigation }) {
     }
   };
 
-  const handleSuccess = () => {
-    alert("PIN Verified Successfully!");
-    setPopupVisible(false);
-  };
-
-  // Refresh handler
   const onRefresh = useCallback(() => {
     userGet();
   }, []);
@@ -85,7 +91,7 @@ export default function WalletScreen({ navigation }) {
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: "#1a1a2e",
+          backgroundColor: "#12182B",
         }}
       >
         <ActivityIndicator size="large" color="#007bff" />
@@ -100,53 +106,76 @@ export default function WalletScreen({ navigation }) {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-         
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>My Wallet</Text>
+          <TouchableOpacity>
+            <Ionicons name="notifications-outline" size={24} color="white" />
+          </TouchableOpacity>
+        </View>
 
         {/* Balance Section */}
-        <ImageBackground
-          source={require("../assets/photos/bg3.jpg")}
-          style={styles.balanceCard}
-        >
-          <View style={styles.balanceItem}>
-            <Text style={styles.balanceLabel}>Main Wallet</Text>
-            <Text style={styles.balanceAmount}>
-              ₹{Number(user?.main_wallet).toFixed(2)}
-            </Text>
-          </View>
-          <View style={styles.balanceItem}>
-            <Text style={styles.balanceLabel}>Game Wallet</Text>
-            <Text style={styles.balanceAmount}>
-              ₹{Number(user?.game_wallet).toFixed(2)}
-            </Text>
-          </View>
-        </ImageBackground>
-
-        {/* Quick Actions Section */}
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-
+        <View style={styles.balanceCard}>
+          <Text style={styles.balanceLabel}>Available Balance</Text>
+          <Text style={styles.balanceAmount}>
+            ₹
+            {Number(user?.main_wallet || 0).toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+            })}
+          </Text>
           <View style={styles.quickActionsContainer}>
             {quickActions.map((action, index) => (
               <TouchableOpacity
                 onPress={action.action}
                 key={index}
-                style={styles.quickActionButton}
+                style={[
+                  styles.quickActionButton,
+                  index === 0 ? styles.payButton : styles.requestButton,
+                ]}
               >
-                <Ionicons name={action.icon} size={24} color="#1E293B" />
-                <Text style={styles.quickActionText}>{action.label}</Text>
+                <Ionicons
+                  name={action.icon}
+                  size={22}
+                  color={index === 0 ? "white" : "#007bff"}
+                />
+                <Text
+                  style={
+                    index === 0
+                      ? styles.payButtonText
+                      : styles.requestButtonText
+                  }
+                >
+                  {action.label}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
         </View>
 
-        <UserStatement />
+        <UserStatement refreshing={refreshing} />
 
         <DepositScreen
-          visible={depositPopup}
-          onClose={() => setDepositPopup(false)}
+          visible={isDepositOpen}
+          onClose={(type) => {
+            setDepositOpen(false);
+            if (type === "success") {
+              setShowSuccessPopup(true);
+              userGet();
+            }
+          }}
+          user={user}
         />
 
-        {/* Success Popup Modal */}
+        <WithdrawalPopup
+          visible={isPopupVisible}
+          onClose={() => {
+            setPopupVisible(false);
+            userGet();
+          }}
+          user={user}
+        />
+
+        {/*Despoti Success Popup Modal */}
         <Modal
           visible={showSuccessPopup}
           transparent
@@ -161,7 +190,10 @@ export default function WalletScreen({ navigation }) {
               />
               <Text style={styles.message}>Verifying Your Payment!</Text>
               <TouchableOpacity
-                onPress={() => setShowSuccessPopup(false)}
+                onPress={() => {
+                  setShowSuccessPopup(false);
+                  userGet();
+                }}
                 style={styles.closeButton}
               >
                 <Text style={styles.closeText}>Close</Text>
@@ -169,12 +201,6 @@ export default function WalletScreen({ navigation }) {
             </View>
           </View>
         </Modal>
-
-        <WithdrawalPopup
-          visible={isPopupVisible}
-          onClose={() => setPopupVisible(false)}
-          user={user}
-        />
         <StatusBar style="light" />
       </ScrollView>
     </SafeAreaView>
@@ -184,132 +210,116 @@ export default function WalletScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#1a1a2e",
+    backgroundColor: "#12182B",
     paddingHorizontal: 16,
-    paddingTop: 60,
+    paddingTop: 40,
   },
-  // Profile Section
-  profileContainer: {
-    alignItems: "center",
-    marginBottom: 18,
-  },
-  profileImage: {
-    width: 80,
-    height: 80,
-    marginBottom: 8,
-  },
-  profileName: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "white",
-    marginBottom: 4,
-  },
-  profileIcon: {
-    marginTop: 4,
-  },
-  // Balance Section
-  balanceCard: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 16,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    overflow: "hidden",
-  },
-  balanceItem: {
-    alignItems: "center",
-  },
-  balanceIcon: {
-    marginBottom: 8,
-  },
-  balanceLabel: {
-    fontSize: 14,
-    color: "white",
-    marginBottom: 4,
-  },
-  balanceAmount: {
-    fontSize: 25,
-    fontWeight: "bold",
-    color: "white",
-  },
-  // Action Buttons
-  actionCard: {
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 16,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  actionButton: {
-    alignItems: "center",
-  },
-  actionText: {
-    fontSize: 12,
-    color: "#6B7280",
-    marginTop: 4,
-  },
-  // Settings List
-  settingsContainer: {
-    flex: 1,
-  },
-  settingsHeader: {
-    fontSize: 14,
-    color: "#F59E0B",
-    marginBottom: 16,
-  },
-  settingsItem: {
+  // Header
+  header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 255, 255, 0.1)",
+    marginBottom: 20,
   },
-  settingsText: {
-    fontSize: 16,
-    color: "#fff",
-  },
-  sectionContainer: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
+  headerTitle: {
+    fontSize: 20,
     fontWeight: "bold",
-    color: "#f58814",
-    marginBottom: 16,
+    color: "white",
+  },
+  // Balance Section
+  balanceCard: {
+    backgroundColor: "#1E2A44",
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 20,
+  },
+  balanceLabel: {
+    fontSize: 16,
+    color: "#A0AEC0",
+    marginBottom: 8,
+  },
+  balanceAmount: {
+    fontSize: 32,
+    fontWeight: "bold",
+    color: "white",
+    marginBottom: 20,
   },
   quickActionsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
   },
   quickActionButton: {
-    backgroundColor: "#ededed",
-    borderRadius: 8,
-    padding: 10,
+    flexDirection: "row",
     alignItems: "center",
-    width: "30%",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    width: "48%",
   },
-  quickActionText: {
-    fontSize: 12,
+  payButton: {
+    backgroundColor: "#007bff",
+  },
+  payButtonText: {
+    fontSize: 16,
+    color: "white",
+    marginLeft: 8,
+  },
+  requestButton: {
+    backgroundColor: "white",
+  },
+  requestButtonText: {
+    fontSize: 16,
+    color: "#007bff",
+    marginLeft: 8,
+  },
+  // Cards Section
+  sectionContainer: {
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 20,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
     color: "#1E293B",
-    marginTop: 8,
+  },
+  card: {
+    backgroundColor: "#2D3A56",
+    borderRadius: 10,
+    padding: 16,
+    marginBottom: 12,
+  },
+  cardBrand: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "white",
+    marginBottom: 8,
+  },
+  cardType: {
+    fontSize: 14,
+    color: "#A0AEC0",
+    marginBottom: 8,
+  },
+  cardHolder: {
+    fontSize: 14,
+    color: "white",
+    marginBottom: 8,
+  },
+  cardNumber: {
+    fontSize: 16,
+    color: "white",
+  },
+  loadingGif: {
+    width: 40,
+    height: 40,
+    marginBottom: 16,
   },
   overlay: {
     flex: 1,
@@ -337,10 +347,5 @@ const styles = StyleSheet.create({
   closeText: {
     color: "white",
     fontWeight: "bold",
-  },
-  loadingGif: {
-    width: 40,
-    height: 40,
-    marginBottom: 16,
   },
 });

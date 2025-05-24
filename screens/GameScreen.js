@@ -1,15 +1,23 @@
 import { TouchableOpacity } from "react-native";
 import { StyleSheet, Text, View } from "react-native";
-import CoinFLip from "../Games/CoinFlip";
-import Mines from "../Componentes/Games/Mines";
+import Mines from "../Games/Mines";
+import Wheel from "../Games/Wheel";
+import CoinFlip from "../Games/CoinFlip";
+import DragonTower from "../Games/DragonTower";
 
 export default function GameScreen({ route, navigation }) {
-  const { gameName } = route.params; 
+  const { gameName } = route.params;
 
   const renderGame = (gameName) => {
     switch (gameName) {
       case "mines":
         return <Mines />;
+      case "wheel":
+        return <Wheel />;
+      case "coinFlip":
+        return <CoinFlip />;
+      case "dragonTower":
+        return <DragonTower />;
       default:
         return (
           <View style={styles.container}>

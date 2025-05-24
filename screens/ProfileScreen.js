@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -9,8 +9,10 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import CreatePin from "../Controllers/CreatePin";
 
 const ProfileScreen = ({ navigation }) => {
+  const [isSetPinOpen, setSetPinOpen] = useState(false);
   // logout
   const handleLogout = async () => {
     try {
@@ -48,24 +50,12 @@ const ProfileScreen = ({ navigation }) => {
           <Ionicons name="chevron-forward" size={24} color="#fff" />
         </TouchableOpacity>
 
-       
-
-        <TouchableOpacity style={styles.menuItem}>
-          <Ionicons name="help-circle-outline" size={24} color="#fff" />
-          <Text style={styles.menuText}>Help & Support</Text>
-          <Ionicons name="chevron-forward" size={24} color="#fff" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem}>
-          <Ionicons name="settings-outline" size={24} color="#fff" />
-          <Text style={styles.menuText}>Settings</Text>
-          <Ionicons name="chevron-forward" size={24} color="#fff" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem}>
-          <Ionicons name="person-add-outline" size={24} color="#fff" />
-          <Text style={styles.menuText}>Invite a Friend</Text>
-          <Ionicons name="chevron-forward" size={24} color="#fff" />
+        <TouchableOpacity
+          onPress={() => setSetPinOpen(true)}
+          style={styles.menuItem}
+        >
+          <Ionicons name="shield" size={24} color="#fff" />
+          <Text style={styles.menuText}>Create PIN</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={handleLogout} style={styles.menuItem}>
@@ -73,6 +63,8 @@ const ProfileScreen = ({ navigation }) => {
           <Text style={styles.menuText}>Logout</Text>
         </TouchableOpacity>
       </View>
+
+      <CreatePin visible={isSetPinOpen} onClose={() => setSetPinOpen(false)} />
     </SafeAreaView>
   );
 };

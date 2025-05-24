@@ -4,14 +4,14 @@ import { styles } from "../styles/Styles";
 import { useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Toast from "react-native-toast-message";
+import { CheckToken } from "../Controllers/userController";
 
 export default function StartingPage({ navigation }) {
   useEffect(() => {
     const checkTokenAndRedirect = async () => {
       try {
-        const token = await AsyncStorage.getItem("token");
-        const targetScreen = token ? "MainApp" : "Login";
-        navigation.replace(targetScreen);
+        await CheckToken();
+        navigation.replace("MainApp");
       } catch (error) {
         console.error("Error checking token:", error);
         Toast.show({
@@ -19,7 +19,9 @@ export default function StartingPage({ navigation }) {
           text1: "Error",
           text2: "Failed to verify authentication",
         });
-        navigation.replace("Login"); // Fallback to Login on error
+        await AsyncStorage.removeItem("token"); // Clear token on error
+        await AsyncStorage.removeItem("email");
+        navigation.replace("Login");
       }
     };
 

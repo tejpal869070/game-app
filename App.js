@@ -12,6 +12,7 @@ import { SafeAreaView } from "react-native";
 import OurGames from "./screens/Games/OurGames";
 import PrivacyPolicyScreen from "./screens/PrivacyPolicyScreen";
 import GiveAwayScreen from "./screens/GiveAwayScreen";
+import ForgotPasswordScreen from "./screens/User/ForgotPasswordScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -48,7 +49,7 @@ export default function App() {
         <Stack.Screen
           name="GameScreen"
           component={GameScreen}
-          options={{ title: "Game" }}
+          options={{ title: "Game", headerShown: false }}
         />
         <Stack.Screen
           name="Privacy"
@@ -60,7 +61,11 @@ export default function App() {
           component={GiveAwayScreen}
           options={{ title: "Privacy Policy", headerShown: false }}
         />
-         
+        <Stack.Screen
+          name="ForgotPassword"
+          component={ForgotPasswordScreen}
+          options={{ headerShown: false }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

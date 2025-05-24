@@ -34,7 +34,7 @@ const ReceiptPopup = ({ visible, onClose, data }) => {
             <View style={styles.detailRow}>
               <Text style={styles.label}>Amount</Text>
               <View style={styles.valueRow}>
-                <Text style={styles.value}>{data?.amount}</Text>
+                <Text style={styles.value}>₹ {data?.amount}</Text>
               </View>
             </View>
 
@@ -42,13 +42,15 @@ const ReceiptPopup = ({ visible, onClose, data }) => {
               <Text style={styles.label}>Date</Text>
               <View style={styles.valueRow}>
                 <Text style={styles.value}>{data?.date?.split("T")[0]}</Text>
+                <Text style={styles.value}>{data?.created_at?.split("T")[0]}</Text>
+
               </View>
             </View>
             <View style={styles.detailRow}>
               <Text style={styles.label}>Time</Text>
               <View style={styles.valueRow}>
                 <Text style={styles.value}>
-                  {data?.date?.split("T")[1]?.split(".")[0]}
+                  {data?.date?.split("T")[1]?.split(".")[0]}{data?.created_at?.split("T")[1]?.split(".")[0]}
                 </Text>
               </View>
             </View>

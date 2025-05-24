@@ -12,20 +12,28 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  ActivityIndicator,
 } from "react-native";
+import PinVerificationPopup from "./PinVerificationPopup";
+import { AddCryptoWithdrawalRequest } from "./userController";
 
 const { height } = Dimensions.get("window");
 
 // Constants
 const USER_BALANCE = 500.0;
-const WITHDRAWAL_FEE = 2.5;
+const WITHDRAWAL_FEE = 20;
 
 const WithdrawalPopup = ({ visible, onClose, user }) => {
   const [amount, setAmount] = useState();
   const [usdtAddress, setUsdtAddress] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [USER_BALANCE, setUserBalance] = useState(Number(user?.main_wallet)/90);
+  const [pinOpen, setPinOpen] = useState(false);
+  const [pin, setPin] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [USER_BALANCE, setUserBalance] = useState(
+    Number(user?.main_wallet) / 90
+  );
   const slideAnim = useRef(new Animated.Value(height)).current;
 
   useEffect(() => {
@@ -56,10 +64,15 @@ const WithdrawalPopup = ({ visible, onClose, user }) => {
     setShowConfirm(true);
   };
 
-  const handleConfirm = async () => {
+  const handleWithdrawal = async () => {
+    setLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setShowConfirm(false);
+      const formData = {
+        amount: parseFloat(amount),
+        address: usdtAddress,
+      };
+      console.log({ amount, usdtAddress });
+      await AddCryptoWithdrawalRequest(formData, pin);
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
@@ -67,9 +80,13 @@ const WithdrawalPopup = ({ visible, onClose, user }) => {
         setUsdtAddress("");
         onClose();
       }, 1500);
-    } catch {
-      alert("Withdrawal failed. Please try again.");
+    } catch (error) { 
+      alert(
+        error.response.data.message || "Withdrawal failed. Please try again."
+      );
       setShowConfirm(false);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -81,144 +98,182 @@ const WithdrawalPopup = ({ visible, onClose, user }) => {
   const totalDeducted = (parseFloat(amount || 0) + WITHDRAWAL_FEE).toFixed(2);
 
   useEffect(() => {
-    setUserBalance(Number(user?.main_wallet)/90);
+    setUserBalance(Number(user?.main_wallet) );
   }, [user]);
 
   return (
-    <Modal visible={visible} transparent animationType="none">
-      <View style={styles.modalContainer}>
-        <Animated.View
-          style={[styles.popup, { transform: [{ translateY: slideAnim }] }]}
-        >
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={{ flex: 1 }}
-            keyboardVerticalOffset={80}
+    <View>
+      <Modal visible={visible} transparent animationType="none">
+        <View style={styles.modalContainer}>
+          <Animated.View
+            style={[styles.popup, { transform: [{ translateY: slideAnim }] }]}
           >
-            <ScrollView contentContainerStyle={styles.scrollContainer}>
-              {!showConfirm && !showSuccess && (
-                <>
-                  <Text style={styles.title}>Withdraw Funds</Text>
-
-                  {/* Balance Card */}
-                  <View style={styles.balanceCard}>
-                    <Text style={styles.balanceTitle}>Your Balance</Text>
-                    <Text style={styles.balanceAmount}>
-                      {USER_BALANCE.toFixed(2)} USDT
-                    </Text>
-                    <Text style={styles.rate}>1 USDT ~ 90.00 INR</Text>
-                  </View>
-
-                  {/* Amount Input */}
-                  <Text style={styles.label}>Amount</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter amount"
-                    placeholderTextColor="#888"
-                    keyboardType="numeric"
-                    value={amount}
-                    onChangeText={setAmount}
-                  />
-
-                  {/* USDT Address Input */}
-                  <Text style={styles.label}>USDT Address</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter USDT address"
-                    placeholderTextColor="#888"
-                    value={usdtAddress}
-                    onChangeText={setUsdtAddress}
-                  />
-
-                  {/* Fee Info */}
-                  {amount ? (
-                    <View style={styles.feeInfo}>
-                      <Text style={styles.feeText}>
-                        Withdrawal Fee: ${calculatedFee}
-                      </Text>
-                      <Text style={styles.feeText}>
-                        Total Deducted: ${totalDeducted}
-                      </Text>
-                    </View>
-                  ) : null}
-
-                  <TouchableOpacity
-                    style={styles.submitButton}
-                    onPress={handleSubmit}
-                  >
-                    <Text style={styles.submitButtonText}>Submit</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.cancelButton}
-                    onPress={() => {
-                      setAmount(), setUsdtAddress("");
-                      onClose();
-                    }}
-                  >
-                    <Text style={styles.cancelButtonText}>Cancel</Text>
-                  </TouchableOpacity>
-                </>
-              )}
-
-              {/* Confirmation */}
-              {showConfirm && (
-                <>
-                  <Text style={styles.title}>Confirm Withdrawal</Text>
-
-                  {/* Confirmation Box */}
-                  <View style={styles.confirmBox}>
-                    <Text style={styles.confirmLabel}>Amount</Text>
-                    <Text style={styles.confirmValue}>
-                      {parseFloat(amount).toFixed(2)} USDT
-                    </Text>
-
-                    <Text style={styles.confirmLabel}>Fee</Text>
-                    <Text style={styles.confirmValue}>{calculatedFee} USDT</Text>
-
-                    <Text style={styles.confirmLabel}>Total</Text>
-                    <Text style={styles.confirmValue}>{totalDeducted} USDT ~ {totalDeducted *90} INR</Text>
-
-                    <Text style={styles.confirmLabel}>USDT Address</Text>
-                    <Text style={styles.confirmValue}>{usdtAddress} </Text>
-                  </View>
-
-                  {/* Action Buttons */}
-                  <TouchableOpacity
-                    style={styles.submitButton}
-                    onPress={handleConfirm}
-                  >
-                    <Text style={styles.submitButtonText}>Confirm</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.cancelButton}
-                    onPress={handleCancelConfirm}
-                  >
-                    <Text style={styles.cancelButtonText}>Cancel</Text>
-                  </TouchableOpacity>
-                </>
-              )}
-
-              {/* Success */}
-              {showSuccess && (
-                <>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              style={{ flex: 1 }}
+              keyboardVerticalOffset={80}
+            >
+              {loading ? (
+                <View
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+                    Processing...
+                  </Text>
+                  <ActivityIndicator size="large" color="#007bff" />
+                </View>
+              ) : showSuccess ? (
+                <View
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginTop: 40,
+                  }}
+                >
                   <Image
                     alt="pending"
                     style={styles.pendingImg}
                     source={require("../assets/photos/loading2.webp")}
                   />
-                  <Text style={styles.title}> Pending!</Text>
+                  <Text style={styles.title}> Pending...</Text>
                   <Text style={styles.successText}>
                     Withdrawal request submitted successfully.
                   </Text>
-                </>
+                </View>
+              ) : (
+                <ScrollView contentContainerStyle={styles.scrollContainer}>
+                  {!showConfirm && !showSuccess && (
+                    <>
+                      <Text style={styles.title}>Withdraw Funds</Text>
+
+                      {/* Balance Card */}
+                      <View style={styles.balanceCard}>
+                        <Text style={styles.balanceTitle}>Your Balance</Text>
+                        <Text style={styles.balanceAmount}>
+                          ₹ {USER_BALANCE.toFixed(2)} 
+                        </Text>
+                        <Text style={styles.rate}>1 USDT ~ 93.00 INR</Text>
+                      </View>
+
+                      {/* Amount Input */}
+                      <Text style={styles.label}>Amount</Text>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Enter amount"
+                        placeholderTextColor="#888"
+                        keyboardType="numeric"
+                        value={amount}
+                        onChangeText={setAmount}
+                      />
+
+                      {/* USDT Address Input */}
+                      <Text style={styles.label}>USDT Address</Text>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Enter USDT address"
+                        placeholderTextColor="#888"
+                        value={usdtAddress}
+                        onChangeText={setUsdtAddress}
+                      />
+
+                      {/* Fee Info */}
+                      {amount ? (
+                        <View style={styles.feeInfo}>
+                          <Text style={styles.feeText}>
+                             Fee: ₹{calculatedFee}
+                          </Text>
+                          <Text style={styles.feeText}>
+                            Total Deducted: ₹{totalDeducted}
+                          </Text>
+                        </View>
+                      ) : null}
+
+                      <TouchableOpacity
+                        style={styles.submitButton}
+                        onPress={handleSubmit}
+                      >
+                        <Text style={styles.submitButtonText}>Submit</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.cancelButton}
+                        onPress={() => {
+                          setAmount(), setUsdtAddress("");
+                          onClose();
+                        }}
+                      >
+                        <Text style={styles.cancelButtonText}>Cancel</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+
+                  {/* Confirmation */}
+                  {showConfirm && (
+                    <>
+                      <Text style={styles.title}>Confirm Withdrawal</Text>
+
+                      {/* Confirmation Box */}
+                      <View style={styles.confirmBox}>
+                        <Text style={styles.confirmLabel}>Amount</Text>
+                        <Text style={styles.confirmValue}>
+                          {parseFloat(amount).toFixed(2)} USDT
+                        </Text>
+
+                        <Text style={styles.confirmLabel}>Fee</Text>
+                        <Text style={styles.confirmValue}>
+                          {calculatedFee} USDT
+                        </Text>
+
+                        <Text style={styles.confirmLabel}>Total</Text>
+                        <Text style={styles.confirmValue}>
+                          {totalDeducted} USDT ~ {totalDeducted * 90} INR
+                        </Text>
+
+                        <Text style={styles.confirmLabel}>USDT Address</Text>
+                        <Text style={styles.confirmValue}>{usdtAddress} </Text>
+                      </View>
+
+                      {/* Action Buttons */}
+                      <TouchableOpacity
+                        style={styles.submitButton}
+                        onPress={() => setPinOpen(true)}
+                      >
+                        <Text style={styles.submitButtonText}>Confirm</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.cancelButton}
+                        onPress={handleCancelConfirm}
+                      >
+                        <Text style={styles.cancelButtonText}>Cancel</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+                </ScrollView>
               )}
-            </ScrollView>
-          </KeyboardAvoidingView>
-        </Animated.View>
-      </View>
-    </Modal>
+            </KeyboardAvoidingView>
+          </Animated.View>
+        </View>
+      </Modal>
+
+      {/* pin verificarion */}
+      <PinVerificationPopup
+        visible={pinOpen}
+        onClose={() => setPinOpen(false)}
+        onSuccess={(pin) => {
+          setPinOpen(false);
+          setPin(pin);
+          handleWithdrawal();
+        }}
+      />
+    </View>
   );
 };
 

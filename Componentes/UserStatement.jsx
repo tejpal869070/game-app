@@ -12,9 +12,8 @@ import { GetAccountAllStatement } from "../Controllers/userController";
 import { TouchableOpacity } from "react-native";
 import ReceiptPopup from "./ReceiptPopup";
 
-export default function UserStatement() {
+export default function UserStatement({ refreshing }) {
   const [data, setData] = useState([]);
-  const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [popupData, setPopupData] = useState({});
@@ -22,9 +21,7 @@ export default function UserStatement() {
   const GetAllStatement = async () => {
     try {
       const response = await GetAccountAllStatement();
-      setData(
-        response?.filter((i) => i.description !== "Pending Deposit").reverse()
-      );
+      setData(response?.reverse());
     } catch (error) {
       setData([]);
     } finally {
@@ -34,14 +31,14 @@ export default function UserStatement() {
 
   useEffect(() => {
     GetAllStatement();
-  }, []);
+  }, [refreshing]);
 
   const renderTransaction = ({ item }) => (
     <TouchableOpacity
       onPress={() => {
         setShowReceipt(true);
-        console.log(item);
         setPopupData(item);
+        console.log(item)
       }}
       style={styles.transactionItem}
     >
@@ -50,6 +47,11 @@ export default function UserStatement() {
           <Image
             style={styles.icon}
             source={require("../assets/photos/wallet (1).png")}
+          />
+        ) : item.type?.toLowerCase().includes("game") ? (
+          <Image
+            style={styles.icon}
+            source={require("../assets/photos/game-controller.png")}
           />
         ) : (
           <Image
@@ -61,7 +63,7 @@ export default function UserStatement() {
       <View style={styles.transactionDetails}>
         <Text style={styles.transactionName}>{item.type}</Text>
         <Text style={styles.transactionDate}>
-          {item.date.split("T")[0]} {item.date.split("T")[1]}
+          {item.date?.split("T")[0]} {item.date?.split("T")[1]}
         </Text>
       </View>
       <Text
@@ -70,7 +72,7 @@ export default function UserStatement() {
           { color: item.type === "Withdrawal" ? "#d70b0b" : "#179f16" },
         ]}
       >
-        ${item.amount}
+        ₹{item.amount}
       </Text>
     </TouchableOpacity>
   );
@@ -112,7 +114,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#2a2a3e",
-    borderRadius: 12,
+    borderRadius: 8,
     padding: 16,
     marginBottom: 12,
     shadowColor: "#000",

@@ -8,6 +8,7 @@ import {
   ImageBackground,
   Image,
 } from "react-native";
+import { PinVerification } from "./userController";
 
 const PinVerificationPopup = ({ visible, onSuccess, onClose }) => {
   const [pin, setPin] = useState("");
@@ -27,16 +28,12 @@ const PinVerificationPopup = ({ visible, onSuccess, onClose }) => {
   // Handle PIN verification
   const handleVerify = async () => {
     try {
-      const response = await pinVerifyApi(pin);
-      if (response.success) {
-        onSuccess(); // Call the parent function on success
-        setPin(""); // Reset PIN
-      } else {
-        alert("Invalid PIN. Please try again.");
-        setPin(""); // Reset PIN on failure
-      }
+      await PinVerification(pin); 
+      onSuccess(pin); // Call the parent function on success
+      setPin(""); // Reset PIN
     } catch (error) {
-      alert("Error verifying PIN. Please try again.");
+      console.log(error);
+      alert("Invalid PIN");
       setPin("");
     }
   };
@@ -102,7 +99,7 @@ const PinVerificationPopup = ({ visible, onSuccess, onClose }) => {
 
             {/* Keypad */}
             <View style={styles.keypad}>
-              {["1", "2", "3", "4", "5", "6", "7", "8", "9",  "0", ""].map(
+              {["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", ""].map(
                 (num, index) => (
                   <TouchableOpacity
                     key={index}
@@ -142,7 +139,7 @@ const styles = StyleSheet.create({
     padding: 20,
     width: "90%",
     alignItems: "center",
-    borderRadius : 12
+    borderRadius: 12,
   },
   logoPlaceholder: {
     width: 50,

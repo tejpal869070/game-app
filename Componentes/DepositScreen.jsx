@@ -2,350 +2,208 @@ import React, { useState } from "react";
 import {
   View,
   Text,
+  Modal,
+  TextInput,
   TouchableOpacity,
   StyleSheet,
-  Modal,
-  ScrollView,
   Image,
-  TextInput,
-  Button,
-  Pressable,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
-import * as FileSystem from "expo-file-system";
-import * as MediaLibrary from "expo-media-library";
-import { Asset } from "expo-asset";
 import Toast from "react-native-simple-toast";
-import * as Clipboard from "expo-clipboard";
+import { AddCryptoDepositRequest } from "../Controllers/userController";
 
-// DepositScreencomponent
-const DepositScreen = ({ visible, onClose }) => {
-  const upiId = "8697457854@ybl"; // Mock wallet address
+export default function DepositScreen({ visible, onClose, user }) {
+  const [amount, setAmount] = useState("");
+  const [transactionId, setTransactionId] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const [amount, setAmount] = useState(Number);
-  const [transactionId, setTransectionId] = useState("");
+  const recommendedAmounts = [100, 1000, 2000, 5000];
 
-  const downloadQRCode = async () => {
+  const formData = {
+    amount: amount,
+    transection_id: transactionId,
+    deposit_to: "SA65S4GT84STR84LDT4R6E5S4651G6A5SEG84AEGA",
+  };
+
+  const handleSubmit = async () => {
+    if (amount < 10) {
+      Toast.show("Minimum deposit is $10");
+      return;
+    } else if (transactionId.length < 10) {
+      Toast.show("Invalid Transaction ID.");
+      return;
+    }
     try {
-      // Request permission
-      const { status } = await MediaLibrary.requestPermissionsAsync();
-      if (status !== "granted") {
-        Toast.show("Permission Denied");
-        return;
-      }
+      await AddCryptoDepositRequest(formData);
 
-      // Load and download QR code asset
-      const asset = Asset.fromModule(require("../assets/photos/qr-code.png"));
-      await asset.downloadAsync();
-
-      // Copy to a location in the file system
-      const fileUri = `${FileSystem.documentDirectory}qr-code.png`;
-      await FileSystem.copyAsync({
-        from: asset.localUri,
-        to: fileUri,
-      });
-
-      // Save to gallery
-      const savedAsset = await MediaLibrary.createAssetAsync(fileUri);
-      await MediaLibrary.createAlbumAsync("Download", savedAsset, false);
-
-      Toast.show("QR code saved to gallery!");
+      setLoading(false);
+      setTransactionId("");
+      setAmount("");
+      onClose("success");
     } catch (error) {
-      console.error(error);
-      Toast.show("Failed to save QR code.");
+      console.log("error",error);
+      Toast.show(error?.response?.data?.message || "Internal Server Error !");
+      setLoading(false);
     }
   };
 
-  const handleCopy = async () => {
-    await Clipboard.setStringAsync(upiId);
-    Toast.show("UPI ID copied to clipboard");
-  };
-
   return (
-    <Modal visible={visible} animationType="slide">
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={onClose}>
-            <Text style={styles.backButton}>←</Text>
-          </TouchableOpacity>
-          <View style={styles.headerCenter}>
-            <Text style={styles.headerTitle}>Deposit</Text>
-          </View>
-          <TouchableOpacity>
-            <Text style={styles.headerRight}>?</Text>
-          </TouchableOpacity>
-        </View>
+    <Modal animationType="slide" transparent={true} visible={visible}>
+      <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+          keyboardVerticalOffset={100}
+        >
+          <ScrollView contentContainerStyle={styles.scrollContainer}>
+            <View style={styles.modalContent}>
+              {/* Balance Section */}
+              {user?.main_wallet < 100 ? (
+                <Text style={styles.balanceLabel}>LOW BALANCE</Text>
+              ) : (
+                <Text
+                  style={{
+                    color: "green",
+                    marginBottom: 4,
+                    fontSize: 14,
+                    fontWeight: "bold",
+                  }}
+                >
+                  YOUR BALANCE
+                </Text>
+              )}
+              <View style={styles.balanceContainer}>
+                <Text style={styles.currency}>₹</Text>
+                <Text style={styles.balance}>{user.main_wallet}</Text>
+              </View>
 
-        {/* Steps Indicator */}
-        <View style={styles.stepsContainer}>
-          <View style={styles.step}>
-            <View style={[styles.stepCircle, styles.activeStepCircle]}>
-              <Text style={styles.stepNumber}>1</Text>
-            </View>
-            <Text style={[styles.stepText, styles.activeStepText]}>
-              Scan QR / Copy UPI ID
-            </Text>
-          </View>
-          <View style={styles.stepLine} />
-          <View style={styles.step}>
-            <View style={styles.stepCircle}>
-              <Text style={styles.stepNumber}>2</Text>
-            </View>
-            <Text style={styles.stepText}>Deposit funds from any UPI app</Text>
-          </View>
-          <View style={styles.stepLine} />
-          <View style={styles.step}>
-            <View style={styles.stepCircle}>
-              <Text style={styles.stepNumber}>3</Text>
-            </View>
-            <Text style={styles.stepText}>Enter trnx. ID for verification</Text>
-          </View>
-        </View>
-
-        {/* Scrollable Content */}
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          {/* Network Selection */}
-
-          {/* Warning Note */}
-          <View style={styles.warningContainer}>
-            <Text style={styles.warningIcon}>⚠️</Text>
-            <Text style={styles.warningText}>
-              Check amount and Trnx.ID before proceeding.
-            </Text>
-          </View>
-
-          {/* Wallet Address Section */}
-          <View style={styles.section}>
-            <Text style={styles.label}>Deposit Details</Text>
-            <View style={styles.qrCodePlaceholder}>
               <Image
-                style={styles.qrCodeText}
-                source={require("../assets/photos/qr-code.png")}
+                style={{ width: 190, marginBottom: 2, height: 190 }}
+                source={require("../assets/photos/qr.jpg")}
               />
-            </View>
-            <Text style={styles.walletAddress}>UPI ID :- {upiId}</Text>
-            <Text style={[styles.walletAddress, { marginBottom: 15 }]}>
-              Banking Name :- INFOTECH PVT LTD
-            </Text>
+              <Text style={styles.qrText}>UPI ID:- ASIS76589@YBL</Text>
+              <Text style={styles.qrText}>Banking Name :- SPARROW GAMES</Text>
 
-            <View style={styles.actionButtons}>
+              {/* Input Section */}
+              <Text style={styles.sectionTitle}>Top-up Wallet</Text>
+              <View style={styles.inputContainer}>
+                <Text style={styles.currencyInput}>₹</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter amount"
+                  keyboardType="numeric"
+                  value={amount}
+                  onChangeText={setAmount}
+                />
+              </View>
+
+              {/* Recommended Amounts */}
+              <View style={styles.recommendedContainer}>
+                <Text style={styles.recommendedLabel}>Recommended:</Text>
+                <View style={styles.recommendedButtons}>
+                  {recommendedAmounts.map((amt, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={styles.recommendedButton}
+                      onPress={() => setAmount(amt.toString())}
+                    >
+                      <Text style={styles.recommendedText}>₹{amt}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Transaction ID */}
+              <Text style={styles.label}>Transaction ID</Text>
+              <TextInput
+                style={styles.inputContainer}
+                placeholder="Enter transaction ID"
+                value={transactionId}
+                keyboardType="default"
+                onChangeText={setTransactionId}
+              />
+
+              {/* Buttons */}
               <TouchableOpacity
-                style={styles.shareButton}
-                onPress={downloadQRCode}
+                style={styles.submitButton}
+                onPress={handleSubmit}
+                disabled={loading}
               >
-                <Text style={styles.shareButtonText}>SAVE</Text>
+                <Text style={styles.submitButtonText}>
+                  {loading ? "PROCESSING..." : "CONFIRM DEPOSIT"}
+                </Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.copyButton} onPress={handleCopy}>
-                <Text style={styles.copyButtonText}>COPY</Text>
+
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => {
+                  setAmount("");
+                  setTransactionId("");
+                  onClose("cancel");
+                }}
+              >
+                <Text style={styles.cancelButtonText}>CANCEL</Text>
               </TouchableOpacity>
             </View>
-          </View>
-
-          <Text style={styles.label}>Enter Amount</Text>
-          <View style={styles.inputContainer}>
-            <Text style={styles.currencyInput}>₹</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter amount"
-              keyboardType="numeric"
-              value={amount}
-              onChangeText={setAmount}
-            />
-          </View>
-
-          <Text style={styles.label}>Transaction ID</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Transaction Id"
-              keyboardType="default"
-              value={transactionId}
-              onChangeText={(text) => setTransectionId(text.toUpperCase())}
-            />
-          </View>
-
-          <Pressable style={styles.submitButton}>
-            <Text style={styles.submitText}>SUBMIT</Text>
-          </Pressable>
-
-          {/* Footer Note */}
-          <View style={styles.footerNote}>
-            <Text style={styles.footerNoteText}>
-              If it's your first transaction, you may undergo an identity
-              verification process.{" "}
-              <Text style={styles.footerLink}>What is this?</Text>
-            </Text>
-          </View>
-        </ScrollView>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </View>
     </Modal>
   );
-};
+}
 
-// Styles
 const styles = StyleSheet.create({
-  container: {
+  modalOverlay: {
     flex: 1,
-    backgroundColor: "#1a1a2e",
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0,0,0,0.3)",
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#333",
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: "flex-end",
   },
-  backButton: {
-    fontSize: 24,
-    color: "#fff",
-  },
-  headerCenter: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  headerTitle: {
-    fontSize: 18,
-    color: "#fff",
-    fontWeight: "bold",
-    marginLeft: 10,
-  },
-  headerRight: {
-    fontSize: 18,
-    color: "#1e90ff",
-  },
-  stepsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  modalContent: {
+    backgroundColor: "#fff",
     padding: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    minHeight: "90%",
   },
-  step: {
-    alignItems: "center",
-    flex: 1,
-  },
-  stepCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: "#555",
-    justifyContent: "center",
-    alignItems: "center",
+  balanceLabel: {
+    color: "#ff0000",
+    fontSize: 14,
+    fontWeight: "bold",
     marginBottom: 5,
   },
-  activeStepCircle: {
-    backgroundColor: "#1e90ff",
-  },
-  stepNumber: {
-    color: "#fff",
-    fontSize: 16,
-  },
-  stepText: {
-    color: "#888",
-    fontSize: 12,
-    textAlign: "center",
-  },
-  activeStepText: {
-    color: "#fff",
-  },
-  stepLine: {
-    flex: 0.5,
-    height: 1,
-    backgroundColor: "#555",
-    alignSelf: "center",
-  },
-  scrollContent: {
-    padding: 20,
-  },
-  section: {
+  balanceContainer: {
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 20,
   },
-  label: {
-    color: "#fff",
+  currency: {
+    fontSize: 24,
+    color: "#000",
+    marginRight: 5,
+  },
+  balance: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#000",
+  },
+  qrText: {
+    color: "#000",
+    fontSize: 14,
+    fontWeight: "bold",
+    marginBottom: 2,
+  },
+  sectionTitle: {
     fontSize: 16,
+    fontWeight: "bold",
+    color: "#000",
     marginBottom: 10,
-  },
-  pickerContainer: {
-    backgroundColor: "#333",
-    borderRadius: 8,
-  },
-  picker: {
-    color: "#fff",
-  },
-  warningContainer: {
-    backgroundColor: "#2f2f2f",
-    borderRadius: 8,
-    padding: 15,
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  warningIcon: {
-    fontSize: 20,
-    color: "#ff9500",
-    marginRight: 10,
-  },
-  warningText: {
-    color: "#fff",
-    fontSize: 14,
-    flex: 1,
-  },
-  qrCodePlaceholder: {
-    width: 150,
-    height: 150,
-    justifyContent: "center",
-    alignItems: "center",
-    alignSelf: "center",
-    marginBottom: 15,
-  },
-  qrCodeText: {
-    fontSize: 14,
-    width: 150,
-    height: 150,
-  },
-  walletAddress: {
-    color: "#fff",
-    fontSize: 14,
-    textAlign: "center",
-  },
-  actionButtons: {
-    flexDirection: "row",
-    justifyContent: "center",
-  },
-  shareButton: {
-    backgroundColor: "#333",
-    borderRadius: 8,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    marginRight: 10,
-    borderWidth : 1,
-    borderColor : "#1e90ff"
-  },
-  shareButtonText: {
-    color: "#1e90ff",
-    fontSize: 16,
-  },
-  copyButton: {
-    backgroundColor: "#1e90ff",
-    borderRadius: 8,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-  },
-  copyButtonText: {
-    color: "#fff",
-    fontSize: 16,
-  },
-  footerNote: {
-    backgroundColor: "#2f2f2f",
-    borderRadius: 8,
-    padding: 15,
-  },
-  footerNoteText: {
-    color: "#fff",
-    fontSize: 14,
-  },
-  footerLink: {
-    color: "#1e90ff",
+    marginTop: 10,
   },
   inputContainer: {
     flexDirection: "row",
@@ -354,35 +212,73 @@ const styles = StyleSheet.create({
     borderColor: "#ddd",
     borderRadius: 8,
     paddingHorizontal: 10,
-    backgroundColor: "#dcf2ff",
     marginBottom: 15,
   },
   currencyInput: {
     fontSize: 18,
-    color: "black",
+    color: "#000",
     marginRight: 5,
   },
   input: {
-    fontSize: 18,
-    color: "black",
+    fontSize: 16,
+    color: "#000",
     flex: 1,
-    fontWeight: 600,
-    backgroundColor: "#dcf2ff",
+  },
+  recommendedContainer: {
+    marginBottom: 20,
+  },
+  recommendedLabel: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 10,
+  },
+  recommendedButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+  },
+  recommendedButton: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    marginBottom: 5,
+    marginRight: 5,
+  },
+  recommendedText: {
+    fontSize: 14,
+    color: "#000",
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#000",
+    marginBottom: 10,
   },
   submitButton: {
-    backgroundColor: "#1e90ff",
-    borderRadius: 8,
-    textAlign: "center",
-    display: "flex",
-    justifyContent: "center",
+    backgroundColor: "#5c169b",
+    paddingVertical: 15,
+    borderRadius: 25,
     alignItems: "center",
-    paddingVertical: 10,
+    marginBottom: 10,
+    marginTop: 10,
   },
-  submitText: {
+  submitButtonText: {
     color: "white",
-    fontSize : 16,
-    fontWeight : 600
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  cancelButton: {
+    paddingVertical: 15,
+    borderRadius: 25,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  cancelButtonText: {
+    color: "#ff0000",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
-
-export default DepositScreen;

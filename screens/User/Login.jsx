@@ -143,7 +143,7 @@ export default function Login({ navigation }) {
             </View>
 
             {/* Forget Password Link */}
-            <TouchableOpacity>
+            <TouchableOpacity onPress={()=> navigation.navigate('ForgotPassword')}>
               <Text style={Customstyles.forgetPassword}>Forget password?</Text>
             </TouchableOpacity>
 

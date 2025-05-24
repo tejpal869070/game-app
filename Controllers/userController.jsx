@@ -12,6 +12,90 @@ export const userLogin = async (userData) => {
   return response;
 };
 
+export const CheckToken = async () => {
+  try {
+    const bearerToken = await AsyncStorage.getItem("token");
+
+    const postData = {
+      email: await AsyncStorage.getItem("email"),
+    };
+
+    const axiosConfig = {
+      headers: {
+        Authorization: `Bearer ${bearerToken}`,
+      },
+    };
+
+    const response = await axios.post(
+      `${API.url}check-token`,
+      postData,
+      axiosConfig
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+export const CheckUserExistance = async (formData) => {
+  const postData = {
+    mobile: formData.mobile,
+    email: formData.email,
+  };
+
+  const response = await axios.post(`${API.url}check-user-existance`, postData);
+  return response;
+};
+
+export const SendOtp = async (formData) => {
+  const dataToSend = {
+    email: formData.email,
+  };
+  const response = await axios.post(`${API.url}send-otp`, dataToSend);
+  console.log(response.data);
+  return response.data;
+};
+
+export const userRegistration = async (formData) => {
+  const postData = {
+    user_name: formData.name,
+    mobile: formData.mobile,
+    password: formData.password,
+    email: formData.email,
+  };
+
+  const response = await axios.post(`${API.url}register`, postData);
+
+  return response;
+};
+
+export const verifyOtp = async (formData) => {
+  try {
+    const postData = {
+      otp: formData.otp,
+      email: formData.email,
+    };
+    const response = await axios.post(`${API.url}verify-otp`, postData);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const resetPassword = async (formData) => {
+  try {
+    const postData = {
+      email: formData.email, 
+      password: formData.password,
+    };
+    const response = await axios.post(`${API.url}reset-password`, postData);
+    return response;
+  } catch (error) { 
+    throw error;
+  }
+};
+
 export const GetUserDetails = async () => {
   try {
     const email = await AsyncStorage.getItem("email");
@@ -55,19 +139,20 @@ export const AddCryptoDepositRequest = async (formData) => {
     throw new Error("Missing authentication information.");
   }
 
-  const postData = new FormData();
-
-  postData.append("amount", formData.amount);
-  postData.append("transection_hash", formData.transection_id);
-  postData.append("image", formData.image);
-  postData.append("deposit_to", formData.deposit_to);
-  postData.append("email", email);
+  const postData = {
+    amount: formData.amount,
+    transection_hash: formData.transection_id,
+    deposit_to: formData.deposit_to,
+    email: email,
+  };
 
   const axiosConfig = {
     headers: {
       Authorization: `Bearer ${bearerToken}`,
+      "Content-Type": "application/json",
     },
   };
+
   try {
     const response = await axios.post(
       `${API.url}add-deposit-request`,
@@ -76,7 +161,7 @@ export const AddCryptoDepositRequest = async (formData) => {
     );
     return response.data;
   } catch (error) {
-    console.log("errordd", error);
+    console.log("errordd", error.response?.data || error.message);
     throw error;
   }
 };
@@ -101,6 +186,86 @@ export const GetAccountAllStatement = async () => {
     axiosConfig
   );
   return response.data;
+};
+
+export const AddCryptoWithdrawalRequest = async (formData, pin) => {
+  try {
+    const email = await AsyncStorage.getItem("email");
+    const bearerToken = await AsyncStorage.getItem("token");
+    const postData = {
+      email: email,
+      amount: formData.amount,
+      pin: pin,
+      withdrawal_address: formData.address,
+    };
+
+    const axiosConfig = {
+      headers: {
+        Authorization: `Bearer ${bearerToken}`,
+      },
+    };
+    const response = await axios.post(
+      `${API.url}add-withdrawal-request`,
+      postData,
+      axiosConfig
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+export const CreateAccountPin = async (pin) => {
+  try {
+    const bearerToken = await AsyncStorage.getItem("token");
+
+    const postData = {
+      email: await AsyncStorage.getItem("email"),
+      pin: pin,
+    };
+
+    const axiosConfig = {
+      headers: {
+        Authorization: `Bearer ${bearerToken}`,
+      },
+    };
+
+    const response = await axios.post(
+      `${API.url}create-pin`,
+      postData,
+      axiosConfig
+    );
+    return response;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const PinVerification = async (pin) => {
+  try {
+    const bearerToken = await AsyncStorage.getItem("token");
+
+    const dataToSent = {
+      pin: pin,
+      email: await AsyncStorage.getItem("email"),
+    };
+
+    const axiosConfig = {
+      headers: {
+        Authorization: `Bearer ${bearerToken}`,
+      },
+    };
+
+    const response = await axios.post(
+      `${API.url}verify-pin`,
+      dataToSent,
+      axiosConfig
+    );
+    return response;
+  } catch (error) {
+    throw error;
+  }
 };
 
 export const MinesGameUpdateWallet = async (formData) => {
