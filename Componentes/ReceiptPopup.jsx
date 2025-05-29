@@ -28,7 +28,7 @@ const ReceiptPopup = ({ visible, onClose, data }) => {
               <View style={styles.iconContainer}>
                 <Ionicons name="arrow-down" size={24} color="#fff" />
               </View>
-              <Text style={styles.receivedText}>{data?.type}</Text>
+              <Text style={styles.receivedText}>{data?.type}{data?.game_type}</Text>
             </View>
 
             <View style={styles.detailRow}>

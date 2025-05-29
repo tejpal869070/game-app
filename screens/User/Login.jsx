@@ -41,7 +41,7 @@ export default function Login({ navigation }) {
     } else if (password.length < 6) {
       Toast.show("Please enter a valid password", Toast.TOP);
       setCreating(false);
-      return; 
+      return;
     }
     try {
       const response = await userLogin(userData);
@@ -53,7 +53,7 @@ export default function Login({ navigation }) {
         navigation.navigate("MainApp");
       }, 800);
     } catch (error) {
-      console.log(error)
+      console.log(error);
       Toast.show(error?.response?.data?.message || "Internal Server Error!");
       setCreating(false);
     }
@@ -109,6 +109,7 @@ export default function Login({ navigation }) {
               <TextInput
                 style={Customstyles.input}
                 placeholder="Mobile or Email"
+                placeholderTextColor="black"
                 value={mobile}
                 onChangeText={setMobile}
                 keyboardType="default"
@@ -128,6 +129,7 @@ export default function Login({ navigation }) {
                 style={Customstyles.input}
                 placeholder="Password"
                 value={password}
+                placeholderTextColor="black"
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
@@ -143,7 +145,9 @@ export default function Login({ navigation }) {
             </View>
 
             {/* Forget Password Link */}
-            <TouchableOpacity onPress={()=> navigation.navigate('ForgotPassword')}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("ForgotPassword")}
+            >
               <Text style={Customstyles.forgetPassword}>Forget password?</Text>
             </TouchableOpacity>
 

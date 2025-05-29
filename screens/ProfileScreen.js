@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -6,12 +6,17 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CreatePin from "../Controllers/CreatePin";
+import { GetUserDetails } from "../Controllers/userController";
+import { StatusBar } from "expo-status-bar";
 
 const ProfileScreen = ({ navigation }) => {
+  const [user, setUser] = useState({});
+  const [loading, setLoading] = useState(true);
   const [isSetPinOpen, setSetPinOpen] = useState(false);
   // logout
   const handleLogout = async () => {
@@ -25,6 +30,40 @@ const ProfileScreen = ({ navigation }) => {
     }
   };
 
+  const userGet = async () => {
+    try {
+      const response = await GetUserDetails();
+      setUser(response?.data?.user || {}); 
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to load user data",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    userGet();
+  }, []);
+
+  if (loading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#12182B",
+        }}
+      >
+        <ActivityIndicator size="large" color="#007bff" />
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.profileSection}>
@@ -32,11 +71,11 @@ const ProfileScreen = ({ navigation }) => {
           source={require("../assets/photos/boy.png")} // Placeholder for profile picture
           style={styles.profileImage}
         />
-        <Text style={styles.username}>Tarun Soni</Text>
-        <Text style={styles.email}>tsoni9742@gmail.com</Text>
-        <TouchableOpacity style={styles.upgradeButton}>
+        <Text style={styles.username}>{user?.user_name}</Text>
+        <Text style={styles.email}>{user?.email}</Text>
+        {/* <TouchableOpacity style={styles.upgradeButton}>
           <Text style={styles.upgradeText}>Upgrade to PRO</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       {/* Menu Options */}
@@ -55,7 +94,7 @@ const ProfileScreen = ({ navigation }) => {
           style={styles.menuItem}
         >
           <Ionicons name="shield" size={24} color="#fff" />
-          <Text style={styles.menuText}>Create PIN</Text>
+          <Text style={styles.menuText}>Create/ Change PIN</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={handleLogout} style={styles.menuItem}>
@@ -65,6 +104,7 @@ const ProfileScreen = ({ navigation }) => {
       </View>
 
       <CreatePin visible={isSetPinOpen} onClose={() => setSetPinOpen(false)} />
+      <StatusBar style="light" />
     </SafeAreaView>
   );
 };

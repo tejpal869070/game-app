@@ -86,12 +86,12 @@ export const verifyOtp = async (formData) => {
 export const resetPassword = async (formData) => {
   try {
     const postData = {
-      email: formData.email, 
+      email: formData.email,
       password: formData.password,
     };
     const response = await axios.post(`${API.url}reset-password`, postData);
     return response;
-  } catch (error) { 
+  } catch (error) {
     throw error;
   }
 };
@@ -305,5 +305,89 @@ export const MinesGameUpdateWallet = async (formData) => {
     axiosConfig
   );
 
+  return response.data;
+};
+
+export const getAllMatch = async () => {
+  const response = await axios.post(`${API.url}user/get-all-match `);
+  return response;
+};
+
+export const getSingleMatchData = async (id) => {
+  const response = await axios.post(
+    `${API.url}admin/get-single-match-detail `,
+    {
+      id,
+    }
+  );
+  return response;
+};
+
+export const addMatchBet = async (formData) => {
+  try {
+    const bearerToken = await AsyncStorage.getItem("token");
+    const data = {
+      email: await AsyncStorage.getItem("email"),
+      match_id: formData.match_id,
+      bet_type: formData.bet_type,
+      bet_value: Number(formData.bet_value),
+      amount: Number(formData.amount),
+      section_id: Number(formData.section_id),
+      selectedTeamName: formData.selectedTeamName,
+    };
+    const axiosConfig = {
+      headers: {
+        Authorization: `Bearer ${bearerToken}`,
+      },
+    };
+    const response = await axios.post(
+      `${API.url}add-match-bet `,
+      data,
+      axiosConfig
+    );
+    return response;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+export const getMyMatchBets = async (match_id) => {
+  const bearerToken = await AsyncStorage.getItem("token");
+  const data = {
+    email: await AsyncStorage.getItem("email"),
+    match_id,
+  };
+  const axiosConfig = {
+    headers: {
+      Authorization: `Bearer ${bearerToken}`,
+    },
+  };
+  const response = await axios.post(
+    `${API.url}my-match-bets `,
+    data,
+    axiosConfig
+  );
+  return response;
+};
+
+export const GetGameWalletStatement = async () => {
+  const bearerToken = await AsyncStorage.getItem("token");
+
+  const postData = {
+    email: await AsyncStorage.getItem("email"),
+  };
+
+  const axiosConfig = {
+    headers: {
+      Authorization: `Bearer ${bearerToken}`,
+    },
+  };
+
+  const response = await axios.post(
+    `${API.url}get-all-game-statement`,
+    postData,
+    axiosConfig
+  );
   return response.data;
 };

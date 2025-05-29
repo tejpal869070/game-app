@@ -11,6 +11,7 @@ import {
   RefreshControl,
   SafeAreaView,
   Image,
+  Pressable,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { GetUserDetails } from "../Controllers/userController";
@@ -101,7 +102,8 @@ export default function WalletScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView
+      <View
+        style={{ flex: 1 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
@@ -116,7 +118,12 @@ export default function WalletScreen({ navigation }) {
 
         {/* Balance Section */}
         <View style={styles.balanceCard}>
-          <Text style={styles.balanceLabel}>Available Balance</Text>
+          <View style={{ display: "flex", flexDirection: "row", gap: 4 }}>
+            <Text style={styles.balanceLabel}>Available Balance</Text>
+            <Pressable onPress={userGet} style={styles.balanceLabel}>
+              <Ionicons size={24} name="reload-circle" color="white" />
+            </Pressable>
+          </View>
           <Text style={styles.balanceAmount}>
             ₹
             {Number(user?.main_wallet || 0).toLocaleString("en-US", {
@@ -202,7 +209,7 @@ export default function WalletScreen({ navigation }) {
           </View>
         </Modal>
         <StatusBar style="light" />
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }

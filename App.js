@@ -13,6 +13,7 @@ import OurGames from "./screens/Games/OurGames";
 import PrivacyPolicyScreen from "./screens/PrivacyPolicyScreen";
 import GiveAwayScreen from "./screens/GiveAwayScreen";
 import ForgotPasswordScreen from "./screens/User/ForgotPasswordScreen";
+import MatchDetail from "./screens/Match/MatchDetail";
 
 const Stack = createNativeStackNavigator();
 
@@ -50,6 +51,11 @@ export default function App() {
           name="GameScreen"
           component={GameScreen}
           options={{ title: "Game", headerShown: false }}
+        />
+        <Stack.Screen
+          name="MatchDetail"
+          component={MatchDetail}
+          options={{ title: "MatchDetail", headerShown: false }}
         />
         <Stack.Screen
           name="Privacy"

@@ -11,7 +11,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { styles } from "../../styles/Styles";
 import { useState } from "react";
 import Toast from "react-native-simple-toast";
-import { CheckUserExistance, SendOtp, userRegistration } from "../../Controllers/userController";
+import {
+  CheckUserExistance,
+  SendOtp,
+  userRegistration,
+} from "../../Controllers/userController";
 
 export default function Register({ navigation }) {
   const [name, setName] = useState("");
@@ -69,18 +73,18 @@ export default function Register({ navigation }) {
   };
 
   const handleVerifyOtp = async () => {
-  if (enteredOtp === otp.toString()) {
-    try {
-      await userRegistration(formData);
-      Toast.show("Registration Successful!");
-      navigation.navigate("Login");
-    } catch (error) {
-      Toast.show(error?.response?.data?.message || "Registration failed");
+    if (enteredOtp === otp.toString()) {
+      try {
+        await userRegistration(formData);
+        Toast.show("Registration Successful!");
+        navigation.navigate("Login");
+      } catch (error) {
+        Toast.show(error?.response?.data?.message || "Registration failed");
+      }
+    } else {
+      Toast.show("Invalid OTP. Please try again.");
     }
-  } else {
-    Toast.show("Invalid OTP. Please try again.");
-  }
-};
+  };
 
   const resendOtp = async () => {
     try {
@@ -113,6 +117,7 @@ export default function Register({ navigation }) {
               <TextInput
                 style={styles.input}
                 placeholder="Enter OTP"
+                placeholderTextColor="black"
                 keyboardType="numeric"
                 value={enteredOtp}
                 onChangeText={setEnteredOtp}
@@ -145,6 +150,7 @@ export default function Register({ navigation }) {
                 style={styles.input}
                 placeholder="Full Name"
                 value={name}
+                placeholderTextColor="black"
                 onChangeText={setName}
                 keyboardType="default"
               />
@@ -160,6 +166,7 @@ export default function Register({ navigation }) {
               <TextInput
                 style={styles.input}
                 placeholder="Email"
+                placeholderTextColor="black"
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -176,6 +183,7 @@ export default function Register({ navigation }) {
               <TextInput
                 style={styles.input}
                 placeholder="Phone Number"
+                placeholderTextColor="black"
                 value={mobile}
                 onChangeText={setMobile}
                 keyboardType="phone-pad"
@@ -192,6 +200,7 @@ export default function Register({ navigation }) {
               <TextInput
                 style={styles.input}
                 placeholder="Password"
+                placeholderTextColor="black"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -208,6 +217,7 @@ export default function Register({ navigation }) {
               <TextInput
                 style={styles.input}
                 placeholder="Confirm Password"
+                placeholderTextColor="black"
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry

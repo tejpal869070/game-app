@@ -12,6 +12,8 @@ import {
   TextInput,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { StatusBar } from "expo-status-bar";
+import SideNavBar from "../Componentes/SideNavBar";
 
 const { width } = Dimensions.get("window");
 
@@ -142,6 +144,26 @@ const HomeScreen = ({ navigation }) => {
   );
 
   // Render item for FlatList
+  const renderGamesGridItem = (item, size, isIcon = false) => (
+    <TouchableOpacity
+      onPress={() =>
+        navigation.navigate("GameScreen", { gameName: item.gameName })
+      }
+      style={[styles.gridItem, { width: size * 0.9 }]}
+    >
+      {isIcon ? (
+        <Image
+          source={item.icon}
+          style={{ width: size * 0.95, height: size * 1.2 }}
+        />
+      ) : (
+        <Image source={item.image} style={styles.gameImage} />
+      )}
+      {item.title && <Text style={styles.gridItemText}>{item.title}</Text>}
+    </TouchableOpacity>
+  );
+
+  // Render item for FlatList
   const renderCasinoItem = (item, size, isIcon = false) => (
     <TouchableOpacity
       style={[styles.gridItem, { width: size, height: size / 1.5 }]}
@@ -173,6 +195,7 @@ const HomeScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <ScrollView>
         {/* Search Bar */}
+        <SideNavBar />
         <View style={styles.searchContainer}>
           <Ionicons name="search" size={20} color="#888" />
           <TextInput style={styles.searchText} placeholder="Search..." />
@@ -209,12 +232,31 @@ const HomeScreen = ({ navigation }) => {
               height: 150,
               margin: "auto",
               borderRadius: 8,
-              resizeMode: "cover",
+              resizeMode: "cover", 
               marginBottom: 16,
             }}
             source={require("../assets/photos/prise4.png")}
           />
         </TouchableOpacity>
+
+        {/* Our games */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Games</Text>
+            <TouchableOpacity>
+              <Text style={styles.moreText}>More Games &gt;</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={games}
+            renderItem={({ item }) =>
+              renderGamesGridItem(item, width / 3, true)
+            }
+            keyExtractor={(item) => item.id}
+            numColumns={3} // Change this from 5 to 3
+            scrollEnabled={false}
+          />
+        </View>
 
         {/* Sports */}
         <View style={styles.section}>
@@ -254,25 +296,10 @@ const HomeScreen = ({ navigation }) => {
           />
         </View>
 
-        {/* Our games */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Games</Text>
-            <TouchableOpacity>
-              <Text style={styles.moreText}>More Games &gt;</Text>
-            </TouchableOpacity>
-          </View>
-          <FlatList
-            data={games}
-            renderItem={({ item }) => renderGameItem(item, width / 3, true)}
-            keyExtractor={(item) => item.id}
-            horizontal={true} // Makes the FlatList scroll horizontally
-            showsHorizontalScrollIndicator={false} // Optional: hides the scroll indicator
-            scrollEnabled={true} // Allows scrolling
-            contentContainerStyle={styles.flatListContainer}
-          />
-        </View>
+        
       </ScrollView>
+
+      <StatusBar style="light" />
     </SafeAreaView>
   );
 };
@@ -290,6 +317,7 @@ const styles = StyleSheet.create({
     margin: 10,
     padding: 10,
     borderRadius: 8,
+    width: "85%",
   },
   searchText: {
     flex: 1,
@@ -361,7 +389,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 14,
     marginTop: 5,
-    textAlign : "center"
+    textAlign: "center",
   },
 });
 
