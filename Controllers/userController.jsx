@@ -1,6 +1,10 @@
 import axios from "axios";
 import { API } from "./API";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import CryptoES from "crypto-es";
+
+var secretKey =
+  "3e6dLf3A02D52L51630ac3883A339Y92b776CY97dbeYC21e113DdLe8314LbD84C53aad90C06D6A0aabYa6DCD139cCDCcf491AZA72CcYacb5CL7D08Zb159D7Z91";
 
 export const userLogin = async (userData) => {
   const postData = {
@@ -268,44 +272,49 @@ export const PinVerification = async (pin) => {
   }
 };
 
-export const MinesGameUpdateWallet = async (formData) => {
-  const amount = formData.amount;
-  const type = formData.type;
-  const game_type = formData.game_type;
-  const details = formData.details || {};
+export const MinesGameUpdateWallet = async (
+  amount,
+  type,
+  game_type,
+  details
+) => {
+  try {
+    const bearerToken = await AsyncStorage.getItem("token");
 
-  const data = {
-    amount,
-    type,
-    game_type,
-    details,
-  };
+    const data = {
+      amount,
+      type,
+      game_type,
+      details: details || {},
+    };
 
-  const secretKey = process.env.REACT_APP_WALLET_UPDATE_KEY;
+    const encodedData = CryptoES.AES.encrypt(
+      JSON.stringify(data),
+      secretKey
+    ).toString();
 
-  const encodedData = CryptoJS.AES.encrypt(
-    JSON.stringify(data),
-    secretKey
-  ).toString();
+    const postData = {
+      email: await AsyncStorage.getItem("email"),
+      data: encodedData,
+    };
 
-  const postData = {
-    email: email,
-    data: encodedData,
-  };
+    const axiosConfig = {
+      headers: {
+        Authorization: `Bearer ${bearerToken}`, // make sure this is defined
+      },
+    };
 
-  const axiosConfig = {
-    headers: {
-      Authorization: `Bearer ${bearerToken}`,
-    },
-  };
-
-  const response = await axios.post(
-    `${API.url}deduct-game-wallet`,
-    postData,
-    axiosConfig
-  );
-
-  return response.data;
+    const response = await axios.post(
+      `${API.url}deduct-game-wallet`,
+      postData,
+      axiosConfig
+    );
+ 
+    return response;
+  } catch (error) {
+    console.error("Wallet update error:", error);
+    throw error;
+  }
 };
 
 export const getAllMatch = async () => {

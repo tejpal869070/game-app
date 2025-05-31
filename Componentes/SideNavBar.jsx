@@ -15,7 +15,7 @@ import Toast from "react-native-simple-toast";
 const { width } = Dimensions.get("window");
 const SIDEBAR_WIDTH = width * 0.75; // 75% of screen width
 
-const SideNavBar = () => {
+const SideNavBar = ({ navigation }) => {
   const [isOpen, setIsOpen] = useState(false);
   const slideAnim = useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
   const [user, setUser] = useState({});
@@ -31,15 +31,19 @@ const SideNavBar = () => {
   };
 
   const menuItems = [
-    { name: "My Wallet", icon: "wallet-outline" },
-    { name: "Refer & Earn", icon: "people-outline" },
-    { name: "Leaderboards", icon: "trophy-outline" },
-    { name: "Game Management", icon: "game-controller-outline" },
-    { name: "Contest Invite Code", icon: "mail-outline" },
-    { name: "Real11 Blog", icon: "newspaper-outline" },
-    { name: "Settings", icon: "settings-outline" },
-    { name: "Logout", icon: "log-out-outline" },
-    { name: "Contact us", icon: "call-outline" },
+    { name: "My Wallet", icon: "wallet-outline", link: "walletScreen" },
+    { name: "Refer & Earn", icon: "people-outline", link: "walletScreen" },
+    { name: "Leaderboards", icon: "trophy-outline", link: "walletScreen" },
+    {
+      name: "Game Management",
+      icon: "game-controller-outline",
+      link: "walletScreen",
+    },
+    { name: "Contest Invite Code", icon: "mail-outline", link: "walletScreen" },
+    { name: "Real11 Blog", icon: "newspaper-outline", link: "walletScreen" },
+    { name: "Settings", icon: "settings-outline", link: "walletScreen" },
+    { name: "Logout", icon: "log-out-outline", link: "walletScreen" },
+    { name: "Contact us", icon: "call-outline", link: "walletScreen" },
   ];
 
   const userGet = async () => {
@@ -96,7 +100,11 @@ const SideNavBar = () => {
 
         {/* Menu Items */}
         {menuItems.map((item, index) => (
-          <TouchableOpacity key={index} style={styles.menuItem}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("Wallet")}
+            key={index}
+            style={styles.menuItem}
+          >
             <Ionicons
               name={item.icon}
               size={24}

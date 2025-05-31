@@ -195,7 +195,7 @@ const HomeScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <ScrollView>
         {/* Search Bar */}
-        <SideNavBar />
+        <SideNavBar navigation={navigation} />
         <View style={styles.searchContainer}>
           <Ionicons name="search" size={20} color="#888" />
           <TextInput style={styles.searchText} placeholder="Search..." />
@@ -232,7 +232,7 @@ const HomeScreen = ({ navigation }) => {
               height: 150,
               margin: "auto",
               borderRadius: 8,
-              resizeMode: "cover", 
+              resizeMode: "cover",
               marginBottom: 16,
             }}
             source={require("../assets/photos/prise4.png")}
@@ -295,8 +295,6 @@ const HomeScreen = ({ navigation }) => {
             contentContainerStyle={styles.flatListContainer} // Optional: to style the content container
           />
         </View>
-
-        
       </ScrollView>
 
       <StatusBar style="light" />

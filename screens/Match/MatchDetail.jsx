@@ -50,13 +50,13 @@ const MatchDetail = () => {
     setSelectedSection(over);
     setModalVisible(!isModalVisible);
     setBetAmount(0);
-    userGet()
+    userGet();
   };
   const toggleExactRunModal = (over) => {
     setSelectedSection(over);
     setExactRunModalVisible(!isExactRunModalVisible);
     setBetAmount(0);
-    userGet()
+    userGet();
   };
 
   // bet function----
@@ -211,7 +211,11 @@ const MatchDetail = () => {
         <View style={styles.tableContainer}>
           {/* Header */}
           <View style={styles.tableRowHeader}>
-            <Text style={[styles.tableCell, styles.headerText]}>Section</Text>
+            <Text
+              style={[styles.tableCell, styles.headerText, { width: "20%" }]}
+            >
+              Section
+            </Text>
             <Text style={[styles.tableCell, styles.headerText]}>Over</Text>
             <Text style={[styles.tableCell, styles.headerText]}>Results</Text>
           </View>
@@ -229,7 +233,9 @@ const MatchDetail = () => {
                   },
                 ]}
               >
-                <Text style={styles.tableCell}>{item.id}</Text>
+                <Text style={[styles.tableCell, { width: "20%" }]}>
+                  {item.id}
+                </Text>
                 <Text style={styles.tableCell}>{item.after_over} OVER</Text>
                 <View style={styles.tableCell}>
                   {item?.result?.map((res, idx) => (
@@ -444,6 +450,12 @@ const MatchDetail = () => {
           >
             <Text style={styles.confirmText}>CONFIRM BET</Text>
           </TouchableOpacity>
+
+          {/* wallet */}
+          <View style={styles.wallet}>
+            <Ionicons name="wallet" size={24} color="black" />
+            <Text style={{ fontWeight: "bold" }}>₹{user?.main_wallet}</Text>
+          </View>
         </View>
       </Modal>
     </SafeAreaView>
@@ -674,7 +686,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   tableCell: {
-    flex: 1,
+    width: "40%",
     color: "#f3f4f6",
     fontSize: 13,
   },

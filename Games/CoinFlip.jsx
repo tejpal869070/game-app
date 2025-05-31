@@ -10,14 +10,22 @@ import {
   Easing,
   Dimensions,
   Pressable,
+  ActivityIndicator,
+  Vibration,
 } from "react-native";
-import Toast from "react-native-toast-message";
+import Toast from "react-native-simple-toast";
 
 import headsImage from "../assets/photos/heads.png";
 import tailsImage from "../assets/photos/tails.png";
 import bg1 from "../assets/photos/bg5.jpg";
 import { Ionicons } from "@expo/vector-icons";
 import { GlobalStyle } from "../styles/GlobalStyle";
+import {
+  GetUserDetails,
+  MinesGameUpdateWallet,
+} from "../Controllers/userController";
+
+const COIN_SIZE = Dimensions.get("window").width * 0.4;
 
 export default function CoinFlip() {
   const [amount, setAmount] = useState(10);
@@ -27,76 +35,142 @@ export default function CoinFlip() {
   const [isWon, setIsWon] = useState(false);
   const [flipping, setFlipping] = useState(false);
   const [displayedSide, setDisplayedSide] = useState("heads");
+  const [user, setUser] = useState({});
+  const [loading, setLoading] = useState(true);
 
   const [pressed, setPressed] = useState(false);
 
   const rotation = useRef(new Animated.Value(0)).current;
 
   // Smooth visual update for displayed side during flip
+  const [flipImage, setFlipImage] = useState(false);
+
   useEffect(() => {
     const id = rotation.addListener(({ value }) => {
-      const deg = (value * 360) % 360;
-      setDisplayedSide(deg < 180 ? "heads" : "tails");
+      const normalized = value % 1; // keep between 0 and 1
+      const angle = normalized * 360;
+
+      setDisplayedSide(angle < 180 ? "heads" : "tails");
+      setFlipImage(angle > 90 && angle < 270);
     });
     return () => rotation.removeListener(id);
   }, [rotation]);
 
- const flipCoin = () => {
-  if (amount < 1 || isNaN(amount)) {
-    Toast.show({ type: "error", text1: "Minimum bet is $1" });
-    return;
-  }
-  if (!selected) {
-    Toast.show({ type: "error", text1: "Please select a side" });
-    return;
-  }
-  if (amount > totalBalance) {
-    Toast.show({ type: "error", text1: "Insufficient Balance" });
-    return;
-  }
+  const flipCoin = async () => {
+    await userGet();
 
-  setFlipping(true);
-  setFlipResult(null);
-
-  const spins = 6;
-  const result = Math.random() < 0.5 ? "heads" : "tails";
-  const finalAngle = result === "heads" ? 0 : 180;
-  const targetRotation = (spins * 360 + finalAngle) / 360;
-
-  Animated.timing(rotation, {
-    toValue: targetRotation,
-    duration: 2500,
-    easing: Easing.inOut(Easing.ease),
-    useNativeDriver: false,
-  }).start(() => {
-    setFlipResult(result);
-    setDisplayedSide(result); // ✅ Ensure final image matches result
-
-    if (result === selected) {
-      setIsWon(true);
-      setTotalBalance((prev) => prev + amount);
-      Toast.show({ type: "success", text1: `You Win! +$${amount}` });
-    } else {
-      setIsWon(false);
-      setTotalBalance((prev) => prev - amount);
-      Toast.show({ type: "error", text1: `You Lose -$${amount}` });
+    if (amount < 1 || isNaN(amount)) {
+      Toast.show("Minimum bet is ₹1");
+      return;
+    }
+    if (!selected) {
+      Toast.show("Please select a side");
+      return;
+    }
+    if (amount > user?.main_wallet) {
+      Toast.show("Insufficient Balance");
+      return;
     }
 
-    rotation.setValue(0); // Reset for next flip
-    setFlipping(false);
-  });
-};
+    const deductWallet = await MinesGameUpdateWallet(
+      amount,
+      "deduct",
+      "Coin Flip",
+      "Add Bet"
+    );
+    userGet();
 
+    if (!deductWallet) {
+      Toast.show("Wallet deduction failed");
+      return;
+    }
+
+    setFlipping(true);
+    setFlipResult(null);
+
+    const result = Math.random() < 0.5 ? "heads" : "tails";
+
+    // Get current rotation value
+    rotation.stopAnimation((currentValue) => {
+      // spins between 6 and 8
+      const spins = Math.floor(Math.random() * 3) + 6; // 6 to 8 full spins
+      const stopAngle = result === "heads" ? 0 : 0.5; // 0 for heads, 0.5 (180deg) for tails
+
+      const finalRotationValue = currentValue + spins + stopAngle;
+
+      Animated.timing(rotation, {
+        toValue: finalRotationValue,
+        duration: 3000,
+        easing: Easing.out(Easing.exp),
+        useNativeDriver: false,
+      }).start(async () => {
+        setFlipResult(result);
+        setDisplayedSide(result);
+        Vibration.vibrate(100);
+
+        if (result === selected) {
+          setIsWon(true);
+          Toast.show(`You Win! +₹${amount * 1.5}`);
+          await MinesGameUpdateWallet(
+            amount * 1.5,
+            "add",
+            "Coin Flip",
+            "Win Bet"
+          );
+        } else {
+          setIsWon(false);
+          Toast.show(`You Lose -₹${amount}`);
+        }
+
+        setFlipping(false);
+
+        // Do NOT reset rotation to 0 — keep the final value so next flip starts from here
+      });
+    });
+  };
 
   const fullRotation = rotation.interpolate({
     inputRange: [0, 1],
     outputRange: ["0deg", "360deg"],
   });
- 
+
+  const userGet = async () => {
+    try {
+      const response = await GetUserDetails();
+      if (response !== null) {
+        setUser(response?.data?.user || {});
+      } else {
+        throw new Error("No user data received");
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      Toast.show("Failed to load user data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    userGet();
+  }, []);
+
+  if (loading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#12182B",
+        }}
+      >
+        <ActivityIndicator size="large" color="#007bff" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      <Toast />
       <Image source={bg1} style={styles.bgImage} />
 
       <View style={styles.coinArea}>
@@ -104,21 +178,19 @@ export default function CoinFlip() {
           style={[
             styles.coinContainer,
             {
-              transform: [{ perspective: 1000 }, { rotateY: fullRotation }],
+              transform: [{ perspective: 1000 }, { rotateX: fullRotation }],
             },
           ]}
         >
-          {flipResult ? (
-            <Image
-              source={displayedSide === flipResult ? headsImage : tailsImage}
-              style={styles.coinFace}
-            />
-          ) : (
+          <View style={styles.faceContainer}>
             <Image
               source={displayedSide === "heads" ? headsImage : tailsImage}
-              style={styles.coinFace}
+              style={[
+                styles.coinFace,
+                flipImage && { transform: [{ scaleY: -1 }] },
+              ]}
             />
-          )}
+          </View>
         </Animated.View>
 
         {/* {flipResult && (
@@ -218,7 +290,7 @@ export default function CoinFlip() {
       <View style={styles.wallet}>
         <Ionicons name="wallet" size={24} color="black" />
         <Text style={{ fontWeight: "bold" }}>
-          ₹{Number(totalBalance).toFixed(2)}
+          ₹{Number(user?.main_wallet).toFixed(2)}
         </Text>
       </View>
     </View>
@@ -241,16 +313,28 @@ const styles = StyleSheet.create({
     paddingTop: 60,
   },
   coinContainer: {
-    width: width * 0.4,
-    height: width * 0.4,
+    width: COIN_SIZE,
+    height: COIN_SIZE,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+
+  faceContainer: {
+    position: "absolute",
+    width: COIN_SIZE,
+    height: COIN_SIZE,
+    backfaceVisibility: "hidden", // hides the reverse side
     justifyContent: "center",
     alignItems: "center",
   },
+
   coinFace: {
-    width: "100%",
-    height: "100%",
+    width: COIN_SIZE,
+    height: COIN_SIZE,
     resizeMode: "contain",
   },
+
   resultText: {
     marginTop: 20,
     fontSize: 24,
